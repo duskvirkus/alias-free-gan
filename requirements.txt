@@ -1,0 +1,6 @@
+pytorch-lightning
+pytorch-lightning-bolts
+tensorfn
+wandb
+ninja
+arrayfire
