@@ -2,7 +2,8 @@ import pytorch_lightning as pl
 from torch import optim
 from argparse import ArgumentParser
 from typing import Any
-from model import Generator
+from model import Generator, filter_parameters
+from stylegan2.model import Discriminator
 
 class AFGAN(pl.LightningModule):
 
@@ -11,6 +12,23 @@ class AFGAN(pl.LightningModule):
         **kwargs: Any,
     ):
         super().__init__()
+
+        # kwargs['style_dim'] = kwargs['size']
+        # kwargs['n_mlp'] = 2
+        # kwargs['kernel_size'] = 3
+        # kwargs['n_taps']: 6
+        # kwargs['filter_parameters'] = {
+        #     '__target': 'model.filter_parameters',
+        #     'n_layer': 14,
+        #     'n_critical': 2,
+        #     'sr_max': kwargs['size'],
+        #     'cutoff_0': 2,
+        #     'cutoff_n': kwargs['size'] / 2,
+        #     'stopband_0': pow(2, 2.1),
+        #     'stopband_n': (kwargs['size'] / 2) * pow(2, 0.3),
+        #     'channel_max': 512,
+        #     'channel_base': pow(2, 14)
+        # }
 
         #         style_dim: 512,
         # n_mlp: 2,
@@ -31,17 +49,43 @@ class AFGAN(pl.LightningModule):
         # margin: 10,
         # lr_mlp: 0.01
 
-        self.generator = model.Generator(**kwargs)
+        self.lr_g = kwargs['lr_g']
+        self.lr_d = kwargs['lr_d']
+        self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
+
+        self.generator = Generator(
+            style_dim=kwargs['size'],
+            n_mlp=2,
+            kernel_size=3,
+            n_taps=6,
+            filter_parameters=filter_parameters(
+                n_layer=14,
+                n_critical=2,
+                sr_max=kwargs['size'],
+                cutoff_0=2,
+                cutoff_n=kwargs['size'] / 2,
+                stopband_0=pow(2, 2.1),
+                stopband_n=(kwargs['size'] / 2) * pow(2, 0.3),
+                channel_max=512,
+                channel_base=pow(2, 14)
+            ),
+            **kwargs
+        )
+
+        self.discriminator = Discriminator(
+            size=kwargs['size'],
+            channel_multiplier=2
+        )
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         pass
 
     def configure_optimizers(self):
-        g_optim = optim.Adam(self.generator.parameters(), lr=conf.training.lr_g, betas=(0, 0.99))
+        g_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
         d_optim = optim.Adam(
             self.discriminator.parameters(),
-            lr=conf.training.lr_d * d_reg_ratio,
-            betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio),
+            lr=self.lr_d * self.d_reg_ratio,
+            betas=(0 ** self.d_reg_ratio, 0.99 ** self.d_reg_ratio),
         )
         return [g_optim, d_optim]
 

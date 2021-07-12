@@ -7,6 +7,8 @@ from torch.nn import functional as F
 from stylegan2.model import PixelNorm, EqualLinear, EqualConv2d
 from stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu
 
+from typing import Any
+
 
 def kaiser_attenuation(n_taps, f_h, sr):
     df = (2 * f_h) / (sr / 2)
@@ -327,6 +329,7 @@ class Generator(nn.Module):
         filter_parameters,
         margin=10,
         lr_mlp=0.01,
+        **kwargs: Any,
     ):
         super().__init__()
 
