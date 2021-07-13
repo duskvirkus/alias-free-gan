@@ -427,3 +427,6 @@ class Generator(nn.Module):
         out = self.to_rgb(out, latent) / 4
 
         return out
+
+    def get_style_dim(self):
+        return self.style_dim

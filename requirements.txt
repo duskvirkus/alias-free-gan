@@ -4,3 +4,4 @@ tensorfn
 wandb
 ninja
 arrayfire
+jsonnet

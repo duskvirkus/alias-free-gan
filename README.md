@@ -8,6 +8,8 @@ Still todo:
 
 - Finish conversion to pytorch lightning
 - Convert upfindn2d and fused_act to ArrayFire to allow for non gpu usage.
+- Add support for --auto_scale_batch_size
+- get callback tensorboard working
 
 ## Notebooks
 

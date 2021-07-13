@@ -18,6 +18,7 @@ def cli_main(args=None):
     script_parser.add_argument("--dataset_path", help='Path to dataset. Required!', type=str, required=True)
     script_parser.add_argument("--iter", help='Number of iterations to train for. (default: %(default)s)', default=800000, type=int)
     script_parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int)
+    # TODO add support for --auto_scale_batch_size
     script_parser.add_argument("--n_samples", help='Number of samples to generate in training process. (default: %(default)s)', default=32, type=int)
     script_parser.add_argument("--start_iter", help='Start iteration counter at. Useful for resuming training from a checkpoint. (default: %(default)s)', default=0, type=int)
 
@@ -25,8 +26,6 @@ def cli_main(args=None):
     parser = pl.Trainer.add_argparse_args(parser)
 
     args = parser.parse_args(args)
-
-    print(args)
 
     model = AFGAN(**vars(args))
 
@@ -38,12 +37,13 @@ def cli_main(args=None):
         ]
     )
 
-    dataset = MultiResolutionDataset(args.dataset_path, transform, args.size)
-    data_loader = data.DataLoader(
-        dataset,
-        batch_size=args.batch,
-        drop_last=True,
-    )
+    print(args.dataset_path)
+    
+    dataset = MultiResolutionDataset(args.dataset_path, transform=transform, resolution=args.size)
+    
+    print(f'Initialized {dataset.__class__.__name__} dataset with {dataset.__len__()} images')
+
+    train_loader = data.DataLoader(dataset, batch_size=args.batch, shuffle=True, num_workers=2, drop_last=True)
 
 
     # callbacks = [
@@ -51,7 +51,7 @@ def cli_main(args=None):
     # ]
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
-    trainer.fit(model, data_loader)
+    trainer.fit(model, train_loader)
 
 
 # dataset = MultiResolutionDataset(conf.path, transform, conf.training.size)
