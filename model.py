@@ -149,6 +149,7 @@ class ModulatedConv2d(nn.Module):
         out_channel,
         kernel_size,
         style_dim,
+        lightning_device,
         demodulate=True,
         decay=0.9989,
         padding=True,
@@ -159,6 +160,8 @@ class ModulatedConv2d(nn.Module):
         self.kernel_size = kernel_size
         self.in_channel = in_channel
         self.out_channel = out_channel
+
+        self.lightning_device = lightning_device
 
         fan_in = in_channel * kernel_size ** 2
         self.scale = 1 / math.sqrt(fan_in)
@@ -175,7 +178,9 @@ class ModulatedConv2d(nn.Module):
         self.register_buffer("ema_var", torch.tensor(1.0))
         self.decay = decay
 
-        self.modulation = EqualLinear(style_dim, in_channel, bias_init=1)
+        self.modulation = EqualLinear(style_dim, in_channel, self.lightning_device, bias_init=1)
+
+        # print(f'self.modulation.weightx: %s on %s' % (self.modulation.weightx.shape, self.modulation.weightx.get_device()))
 
         self.demodulate = demodulate
 
@@ -185,8 +190,11 @@ class ModulatedConv2d(nn.Module):
     def forward(self, input, style):
         batch, in_channel, height, width = input.shape
 
+        # print(f'style: %s on %s' % (style.shape, style.get_device()))
         style = self.modulation(style).view(batch, 1, in_channel, 1, 1)
+        # print(f'style: %s on %s' % (style.shape, style.get_device()))
         weight = self.scale * self.weight * style
+
 
         if self.demodulate:
             demod = torch.rsqrt(weight.pow(2).sum([2, 3, 4]) + 1e-8)
@@ -279,6 +287,7 @@ class AliasFreeConv(nn.Module):
         style_dim,
         upsample_filter,
         downsample_filter,
+        lightning_device,
         upsample=1,
         demodulate=True,
         margin=10,
@@ -286,7 +295,7 @@ class AliasFreeConv(nn.Module):
         super().__init__()
 
         self.conv = ModulatedConv2d(
-            in_channel, out_channel, kernel_size, style_dim, demodulate=demodulate
+            in_channel, out_channel, kernel_size, style_dim, lightning_device, demodulate=demodulate
         )
 
         self.activation = AliasFreeActivation(
@@ -307,10 +316,10 @@ class AliasFreeConv(nn.Module):
 
 
 class ToRGB(nn.Module):
-    def __init__(self, in_channel, style_dim):
+    def __init__(self, in_channel, style_dim, lightning_device):
         super().__init__()
 
-        self.conv = ModulatedConv2d(in_channel, 3, 1, style_dim, demodulate=False)
+        self.conv = ModulatedConv2d(in_channel, 3, 1, style_dim, lightning_device, demodulate=False)
         self.bias = nn.Parameter(torch.zeros(3))
 
     def forward(self, input, style):
@@ -328,6 +337,7 @@ class Generator(nn.Module):
         kernel_size,
         n_taps,
         filter_parameters,
+        lightning_device,
         margin=10,
         lr_mlp=0.01,
         **kwargs: Any,
@@ -337,12 +347,14 @@ class Generator(nn.Module):
         self.style_dim = style_dim
         self.margin = margin
 
+        self.lightning_device = lightning_device
+
         layers = [PixelNorm()]
 
         for i in range(n_mlp):
             layers.append(
                 EqualLinear(
-                    style_dim, style_dim, lr_mul=lr_mlp, activation="fused_lrelu"
+                    style_dim, style_dim, self.lightning_device, lr_mul=lr_mlp, activation="fused_lrelu"
                 )
             )
 
@@ -355,15 +367,19 @@ class Generator(nn.Module):
         channels = filter_parameters["channels"]
 
         self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
-        self.affine_fourier = EqualLinear(style_dim, 4)
+        self.affine_fourier = EqualLinear(style_dim, 4, self.lightning_device)
         # self.affine_fourier.weight.detach().zero_()
         # self.affine_fourier.weight.requires_grad_(False).zero_()
         # self.affine_fourier.oweight[self.affine_fourier.oweight] = 0.0
         with torch.no_grad():
+            # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
             self.affine_fourier.weight.zero_()
             self.affine_fourier.bias.copy_(
                 torch.tensor([1, 0, 0, 0], dtype=torch.float32)
             )
+
+            # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
+        # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
         # self.affine_fourier.bias.detach().copy_(
         #     torch.tensor([1, 0, 0, 0], dtype=torch.float32)
         # )
@@ -401,7 +417,7 @@ class Generator(nn.Module):
                 )
             )
 
-        self.to_rgb = ToRGB(channels[-1], style_dim)
+        self.to_rgb = ToRGB(channels[-1], style_dim, self.lightning_device)
 
     def mean_latent(self, n_latent):
         latent_in = torch.randn(
@@ -421,9 +437,9 @@ class Generator(nn.Module):
         return self.affine_fourier(latent)
 
     def forward(self, style, truncation=1, truncation_latent=None, transform=None):
-        print(style.shape)
-        print(style.get_device())
-        latent = self.style(style)
+        # print(style.shape)
+        # print(style.get_device())
+        latent = self.style(style) #, self.lightning_device)
 
         if truncation < 1:
             latent = truncation_latent + truncation * (latent - truncation_latent)

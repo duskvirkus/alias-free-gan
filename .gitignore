@@ -132,5 +132,4 @@ wandb/
 train_orig.py
 
 datasets
-notebooks/devel.ipynb
 lightning_logs

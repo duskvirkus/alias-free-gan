@@ -10,6 +10,8 @@ from torch.autograd import Function
 
 from .op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
 
+# import pytorch_lightning as pl
+
 
 class PixelNorm(nn.Module):
     def __init__(self):
@@ -131,16 +133,21 @@ class EqualConv2d(nn.Module):
 
 class EqualLinear(nn.Module):
     def __init__(
-        self, in_dim, out_dim, bias=True, bias_init=0, lr_mul=1, activation=None
+        self, in_dim, out_dim, lightning_device, bias=True, bias_init=0, lr_mul=1, activation=None
     ):
         super().__init__()
 
-        print(f'lr_mul: %f' % lr_mul)
-        print(f'out_dim: %s' % out_dim)
-        print(f'in_dim: %s' % in_dim)
+        self.lightning_device = lightning_device
+
+        # print(f'lr_mul: %f' % lr_mul)
+        # print(f'out_dim: %s' % out_dim)
+        # print(f'in_dim: %s' % in_dim)
         self.weight = nn.Parameter(torch.randn(out_dim, in_dim).div_(lr_mul))
+        # self.register_buffer("weight", torch.randn(out_dim, in_dim).div_(lr_mul))
         print(f'self.weight: %s on %s' % (self.weight.shape, self.weight.get_device()))
 
+        # temp_lightning = pl.LightningModule()
+        # self.lightning_device = temp_lightning.device
 
         if bias:
             self.bias = nn.Parameter(torch.zeros(out_dim).fill_(bias_init))
@@ -154,10 +161,15 @@ class EqualLinear(nn.Module):
         self.lr_mul = lr_mul
 
     def forward(self, input):
+        print(f'self.weight: %s on %s' % (self.weight.shape, self.weight.get_device()))
+        self.weight.to(self.lightning_device) # TODO come back and fix this horrible thing
+        print(f'self.weight: %s on %s' % (self.weight.shape, self.weight.get_device()))
         if self.activation:
-            print(f'input: %s on %s' % (input.shape, input.get_device()))
-            print(f'self.weight: %s on %s' % (self.weight.shape, self.weight.get_device()))
-            print(f'self.scale: %f' % self.scale)
+            # print(f'input: %s on %s' % (input.shape, input.get_device()))
+            # print(f'self.scale: %f' % self.scale)
+            # temp = self.weight * self.scale
+            # temp = self.weight.mul(self.scale)
+            # print(f'temp: %s on %s' % (temp.shape, temp.get_device()))
             out = F.linear(input, self.weight * self.scale)
             out = fused_leaky_relu(out, self.bias * self.lr_mul)
 
@@ -645,7 +657,7 @@ class ResBlock(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, size, channel_multiplier=2, blur_kernel=[1, 3, 3, 1]):
+    def __init__(self, size, lightning_device, channel_multiplier=2, blur_kernel=[1, 3, 3, 1]):
         super().__init__()
 
         channels = {
@@ -680,8 +692,8 @@ class Discriminator(nn.Module):
 
         self.final_conv = ConvLayer(in_channel + 1, channels[4], 3)
         self.final_linear = nn.Sequential(
-            EqualLinear(channels[4] * 4 * 4, channels[4], activation="fused_lrelu"),
-            EqualLinear(channels[4], 1),
+            EqualLinear(channels[4] * 4 * 4, channels[4], lightning_device, activation="fused_lrelu"),
+            EqualLinear(channels[4], 1, lightning_device),
         )
 
     def forward(self, input):

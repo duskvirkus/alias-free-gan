@@ -27,8 +27,6 @@ def cli_main(args=None):
 
     args = parser.parse_args(args)
 
-    model = AFGAN(**vars(args))
-
     transform = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(),
@@ -51,6 +49,8 @@ def cli_main(args=None):
     # ]
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
+
+    model = AFGAN(**vars(args))
     trainer.fit(model, train_loader)
 
 
