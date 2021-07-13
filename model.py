@@ -198,7 +198,8 @@ class ModulatedConv2d(nn.Module):
 
         if self.training:
             var = input.pow(2).mean((0, 1, 2, 3))
-            self.ema_var.mul_(self.decay).add_(var.detach(), alpha=1 - self.decay)
+            #self.ema_var.mul_(self.decay).add_(var.detach(), alpha=1 - self.decay)
+            self.ema_var.mul_(self.decay).add_(var, alpha=1 - self.decay)
 
         weight = weight / (torch.sqrt(self.ema_var) + 1e-8)
 
@@ -355,10 +356,20 @@ class Generator(nn.Module):
 
         self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
         self.affine_fourier = EqualLinear(style_dim, 4)
-        self.affine_fourier.weight.detach().zero_()
-        self.affine_fourier.bias.detach().copy_(
-            torch.tensor([1, 0, 0, 0], dtype=torch.float32)
-        )
+        # self.affine_fourier.weight.detach().zero_()
+        # self.affine_fourier.weight.requires_grad_(False).zero_()
+        # self.affine_fourier.oweight[self.affine_fourier.oweight] = 0.0
+        with torch.no_grad():
+            self.affine_fourier.weight.zero_()
+            self.affine_fourier.bias.copy_(
+                torch.tensor([1, 0, 0, 0], dtype=torch.float32)
+            )
+        # self.affine_fourier.bias.detach().copy_(
+        #     torch.tensor([1, 0, 0, 0], dtype=torch.float32)
+        # )
+        # self.affine_fourier.bias.requires_grad_(False).copy_(
+        #     torch.tensor([1, 0, 0, 0], dtype=torch.float32)
+        # )
         self.conv1 = EqualConv2d(channels[0], channels[0], 1)
 
         self.convs = nn.ModuleList()
@@ -394,7 +405,8 @@ class Generator(nn.Module):
 
     def mean_latent(self, n_latent):
         latent_in = torch.randn(
-            n_latent, self.style_dim, device=self.conv1.weight.device
+            # n_latent, self.style_dim, device=self.conv1.weight.device
+            n_latent, self.style_dim
         )
         latent = self.style(latent_in).mean(0, keepdim=True)
 
@@ -409,6 +421,8 @@ class Generator(nn.Module):
         return self.affine_fourier(latent)
 
     def forward(self, style, truncation=1, truncation_latent=None, transform=None):
+        print(style.shape)
+        print(style.get_device())
         latent = self.style(style)
 
         if truncation < 1:

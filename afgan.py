@@ -114,7 +114,8 @@ class AFGAN(pl.LightningModule):
         )
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        real, _ = batch
+        print(batch.shape)
+        real = batch
 
         fake_predict = self._get_fake_predict()
         
@@ -154,6 +155,7 @@ class AFGAN(pl.LightningModule):
 
     def _get_fake_img(self):
         noise = self._make_noise(self.generator.get_style_dim(), 1)
+        print(noise.get_device())
         return self.generator(noise)
 
     def _get_real_img_aug(self, real: Tensor):
