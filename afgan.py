@@ -17,42 +17,6 @@ class AFGAN(pl.LightningModule):
     ):
         super().__init__()
 
-        # kwargs['style_dim'] = kwargs['size']
-        # kwargs['n_mlp'] = 2
-        # kwargs['kernel_size'] = 3
-        # kwargs['n_taps']: 6
-        # kwargs['filter_parameters'] = {
-        #     '__target': 'model.filter_parameters',
-        #     'n_layer': 14,
-        #     'n_critical': 2,
-        #     'sr_max': kwargs['size'],
-        #     'cutoff_0': 2,
-        #     'cutoff_n': kwargs['size'] / 2,
-        #     'stopband_0': pow(2, 2.1),
-        #     'stopband_n': (kwargs['size'] / 2) * pow(2, 0.3),
-        #     'channel_max': 512,
-        #     'channel_base': pow(2, 14)
-        # }
-
-        #         style_dim: 512,
-        # n_mlp: 2,
-        # kernel_size: 3,
-        # n_taps: 6,
-        # filter_parameters: {
-        #     __target: 'model.filter_parameters',
-        #     n_layer: 14,
-        #     n_critical: 2,
-        #     sr_max: $.training.size,
-        #     cutoff_0: 2,
-        #     cutoff_n: self.sr_max / 2,
-        #     stopband_0: std.pow(2, 2.1),
-        #     stopband_n: self.cutoff_n * std.pow(2, 0.3),
-        #     channel_max: 512,
-        #     channel_base: std.pow(2, 14)
-        # },
-        # margin: 10,
-        # lr_mlp: 0.01
-
         self.batch = kwargs['batch']
         self.augment = kwargs['augment']
 
@@ -113,19 +77,12 @@ class AFGAN(pl.LightningModule):
             channel_multiplier=2
         )
 
-        print(f'AFGAN device: %s' % self.device)
-
     def training_step(self, batch, batch_idx, optimizer_idx):
         print(f'AFGAN device: %s' % self.device)
-        print(batch.shape)
         print(f'batch shape: %s' % str(batch.shape))
         real = batch
 
         fake_predict = self._get_fake_predict()
-        
-        # real_score = real_predict.mean()
-        # fake_score = fake_predict.mean()
-        # r1_loss = self._d_r1_loss(real_predict, real)
 
         # Train generator
         if optimizer_idx == 0:
@@ -159,7 +116,6 @@ class AFGAN(pl.LightningModule):
 
     def _get_fake_img(self):
         noise = self._make_noise(self.generator.get_style_dim(), 1)
-        # print(noise.get_device())
         return self.generator(noise)
 
     def _get_real_img_aug(self, real: Tensor):

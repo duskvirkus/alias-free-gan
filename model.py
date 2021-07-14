@@ -177,8 +177,6 @@ class ModulatedConv2d(nn.Module):
 
         self.modulation = EqualLinear(style_dim, in_channel, bias_init=1)
 
-        # print(f'self.modulation.weightx: %s on %s' % (self.modulation.weightx.shape, self.modulation.weightx.get_device()))
-
         self.demodulate = demodulate
 
     def __repr__(self):
@@ -187,9 +185,7 @@ class ModulatedConv2d(nn.Module):
     def forward(self, input, style):
         batch, in_channel, height, width = input.shape
 
-        # print(f'style: %s on %s' % (style.shape, style.get_device()))
         style = self.modulation(style).view(batch, 1, in_channel, 1, 1)
-        # print(f'style: %s on %s' % (style.shape, style.get_device()))
         weight = self.scale * self.weight * style
 
 
@@ -361,24 +357,11 @@ class Generator(nn.Module):
 
         self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
         self.affine_fourier = EqualLinear(style_dim, 4)
-        # self.affine_fourier.weight.detach().zero_()
-        # self.affine_fourier.weight.requires_grad_(False).zero_()
-        # self.affine_fourier.oweight[self.affine_fourier.oweight] = 0.0
         with torch.no_grad():
-            # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
             self.affine_fourier.weight.zero_()
             self.affine_fourier.bias.copy_(
                 torch.tensor([1, 0, 0, 0], dtype=torch.float32)
             )
-
-            # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
-        # print(f'self.affine_fourier.weightx: %s on %s' % (self.affine_fourier.weightx.shape, self.affine_fourier.weightx.get_device()))
-        # self.affine_fourier.bias.detach().copy_(
-        #     torch.tensor([1, 0, 0, 0], dtype=torch.float32)
-        # )
-        # self.affine_fourier.bias.requires_grad_(False).copy_(
-        #     torch.tensor([1, 0, 0, 0], dtype=torch.float32)
-        # )
         self.conv1 = EqualConv2d(channels[0], channels[0], 1)
 
         self.convs = nn.ModuleList()
@@ -430,8 +413,6 @@ class Generator(nn.Module):
         return self.affine_fourier(latent)
 
     def forward(self, style, truncation=1, truncation_latent=None, transform=None):
-        # print(style.shape)
-        # print(style.get_device())
         latent = self.style(style)
 
         if truncation < 1:
