@@ -7,6 +7,8 @@ from torch.nn import functional as F
 from stylegan2.model import PixelNorm, EqualLinear, EqualConv2d
 from stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu
 
+from typing import Any
+
 
 def kaiser_attenuation(n_taps, f_h, sr):
     df = (2 * f_h) / (sr / 2)
@@ -186,6 +188,7 @@ class ModulatedConv2d(nn.Module):
         style = self.modulation(style).view(batch, 1, in_channel, 1, 1)
         weight = self.scale * self.weight * style
 
+
         if self.demodulate:
             demod = torch.rsqrt(weight.pow(2).sum([2, 3, 4]) + 1e-8)
             weight = weight * demod.view(batch, self.out_channel, 1, 1, 1)
@@ -196,7 +199,8 @@ class ModulatedConv2d(nn.Module):
 
         if self.training:
             var = input.pow(2).mean((0, 1, 2, 3))
-            self.ema_var.mul_(self.decay).add_(var.detach(), alpha=1 - self.decay)
+            #self.ema_var.mul_(self.decay).add_(var.detach(), alpha=1 - self.decay)
+            self.ema_var.mul_(self.decay).add_(var, alpha=1 - self.decay)
 
         weight = weight / (torch.sqrt(self.ema_var) + 1e-8)
 
@@ -327,6 +331,7 @@ class Generator(nn.Module):
         filter_parameters,
         margin=10,
         lr_mlp=0.01,
+        **kwargs: Any,
     ):
         super().__init__()
 
@@ -352,10 +357,11 @@ class Generator(nn.Module):
 
         self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
         self.affine_fourier = EqualLinear(style_dim, 4)
-        self.affine_fourier.weight.detach().zero_()
-        self.affine_fourier.bias.detach().copy_(
-            torch.tensor([1, 0, 0, 0], dtype=torch.float32)
-        )
+        with torch.no_grad():
+            self.affine_fourier.weight.zero_()
+            self.affine_fourier.bias.copy_(
+                torch.tensor([1, 0, 0, 0], dtype=torch.float32)
+            )
         self.conv1 = EqualConv2d(channels[0], channels[0], 1)
 
         self.convs = nn.ModuleList()
@@ -391,7 +397,8 @@ class Generator(nn.Module):
 
     def mean_latent(self, n_latent):
         latent_in = torch.randn(
-            n_latent, self.style_dim, device=self.conv1.weight.device
+            # n_latent, self.style_dim, device=self.conv1.weight.device
+            n_latent, self.style_dim
         )
         latent = self.style(latent_in).mean(0, keepdim=True)
 
@@ -424,3 +431,6 @@ class Generator(nn.Module):
         out = self.to_rgb(out, latent) / 4
 
         return out
+
+    def get_style_dim(self):
+        return self.style_dim

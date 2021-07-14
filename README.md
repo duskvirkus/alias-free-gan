@@ -1,26 +1,25 @@
-# alias-free-gan-pytorch
+# Alias-Free GAN Pytorch Lightning
 
-Unofficial implementation of Alias-Free Generative Adversarial Networks. (https://arxiv.org/abs/2106.12423) This implementation contains a lot of my guesses, so I think there are many differences to the official implementations
+This is a fork of Kim Seonghyeon's (rosinality) implementation of Alias-Free Generative Adversarial Networks (https://arxiv.org/abs/2106.12423). This version has been adapted to pytorch lightning. The result can be used on a wider variety of hardware including TPUs.
 
-## Usage
+⚠️ Incomplete Project ⚠️
 
-First create lmdb datasets:
+Still todo:
 
-> python prepare_data.py --out LMDB_PATH --n_worker N_WORKER --size SIZE1,SIZE2,SIZE3,... DATASET_PATH
+- Finish conversion to pytorch lightning
+- Convert upfindn2d and fused_act to ArrayFire to allow for non gpu usage.
+- Add support for --auto_scale_batch_size
+- get callback tensorboard working
+- @auto_move_data might not be the best so maybe change it if possible
 
-This will convert images to jpeg and pre-resizes it. This implementation does not use progressive growing, but you can create multiple resolution datasets using size arguments with comma separated lists, for the cases that you want to try another resolutions later.
+## Notebooks
 
-Then you can train model in distributed settings
+coming soon
 
-> python train.py  --n_gpu N_GPU --conf config/config-t.jsonnet training.batch=BATCH_SIZE path=LMDB_PATH
+## Examples
 
-train.py supports Weights & Biases logging. If you want to use it, add `wandb=true` arguments to the script.
+coming soon
 
-## Sample
+## Pre-trained Models
 
-![Latent translation sample 1](doc/sample1.gif)
-![Latent translation sample 2](doc/sample2.gif)
-![Latent translation sample 3](doc/sample3.gif)
-![Latent translation sample 4](doc/sample4.gif)
-![Latent translation sample 5](doc/sample5.gif)
-![Latent translation sample 6](doc/sample6.gif)
+coming soon
