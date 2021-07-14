@@ -87,6 +87,9 @@ class AFGAN(pl.LightningModule):
             self.n_samples, self.size
         )
 
+    def on_train_start(self):
+        print(f'AlignFreeGAN device: %s' % self.device)
+
     def training_step(self, batch, batch_idx, optimizer_idx):
         # print(f'AFGAN device: %s' % self.device)
         # print(f'batch shape: %s' % str(batch.shape))
@@ -105,7 +108,7 @@ class AFGAN(pl.LightningModule):
             # return g_loss
             loss = g_loss
             accum = 0.5 ** (32 / (10 * 1000))
-            AFGAN._accumulate(self.g_ema, self.generator, accum)
+            self._accumulate(self.g_ema, self.generator, accum)
 
         # Train discriminator
         if optimizer_idx == 1:
@@ -131,8 +134,8 @@ class AFGAN(pl.LightningModule):
 
     def _make_noise(self, latent_dim, n_noise):
         if n_noise == 1:
-            return torch.randn(self.batch, latent_dim)
-        return torch.randn(n_noise, self.batch, latent_dim)
+            return torch.randn(self.batch, latent_dim, device=self.device)
+        return torch.randn(n_noise, self.batch, latent_dim, device=self.device)
 
     def _d_logistic_loss(self, real_pred, fake_pred):
         real_loss = F.softplus(-real_pred)
@@ -169,12 +172,13 @@ class AFGAN(pl.LightningModule):
         for p in model.parameters():
             p.requires_grad = flag
 
-    @staticmethod
-    def _accumulate(model1, model2, decay=0.999):
+    def _accumulate(self, model1, model2, decay=0.999):
         par1 = dict(model1.named_parameters())
         par2 = dict(model2.named_parameters())
 
         for k in par1.keys():
+            par1[k].data = par1[k].data.to(self.device)
+            par2[k].data = par2[k].data.to(self.device)
             par1[k].data.mul_(decay).add_(par2[k].data, alpha=1 - decay)
 
         buf1 = dict(model1.named_buffers())

@@ -10,7 +10,6 @@ Still todo:
 - Convert upfindn2d and fused_act to ArrayFire to allow for non gpu usage.
 - Add support for --auto_scale_batch_size
 - get callback tensorboard working
-- @auto_move_data might not be the best so maybe change it if possible
 
 ## Notebooks
 
