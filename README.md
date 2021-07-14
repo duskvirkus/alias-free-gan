@@ -13,7 +13,11 @@ Still todo:
 
 ## Notebooks
 
-coming soon
+### Basic Training Colab Notebook for Alias Free GAN in pytorch lightning
+
+<a href="https://colab.research.google.com/github/duskvirkus/alias-free-gan-pytorch/blob/main/notebooks/AliasFreeGAN_lightning_basic_training.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+A simple notebook for single gpu training on colab. Will likely change and might not be working so use with that in mind.
 
 ## Examples
 
