@@ -77,7 +77,6 @@ class AFGAN(pl.LightningModule):
                 channel_max=512,
                 channel_base=pow(2, 14)
             ),
-            'lightning_device': self.device,
         }
 
         # self.generator = Generator(
@@ -111,7 +110,6 @@ class AFGAN(pl.LightningModule):
 
         self.discriminator = Discriminator(
             size=kwargs['size'],
-            lightning_device=self.device,
             channel_multiplier=2
         )
 
