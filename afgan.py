@@ -78,21 +78,29 @@ class AFGAN(pl.LightningModule):
         )
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        print(f'AFGAN device: %s' % self.device)
-        print(f'batch shape: %s' % str(batch.shape))
+        # print(f'AFGAN device: %s' % self.device)
+        # print(f'batch shape: %s' % str(batch.shape))
         real = batch
-
-        fake_predict = self._get_fake_predict()
 
         # Train generator
         if optimizer_idx == 0:
+            AFGAN._requires_grad(self.generator, True)
+            AFGAN._requires_grad(self.discriminator, False)
+            self.generator.eval()
+            fake_predict = self._get_fake_predict()
             g_loss = self._g_nonsaturating_loss(fake_predict)
+            # self.generator.zero_grad()
             return g_loss
 
         # Train discriminator
         if optimizer_idx == 1:
+            AFGAN._requires_grad(self.generator, False)
+            AFGAN._requires_grad(self.discriminator, True)
+            self.generator.eval()
+            fake_predict = self._get_fake_predict()
             real_predict = self._get_real_predict(real)
             d_loss = self._d_logistic_loss(real_predict, fake_predict)
+            # self.discriminator.zero_grad()
             return d_loss
 
     def _get_real_predict(self, real: Tensor) -> Tensor:
@@ -137,6 +145,11 @@ class AFGAN(pl.LightningModule):
         loss = F.softplus(-fake_predict).mean()
 
         return loss
+
+    @staticmethod
+    def _requires_grad(model, flag=True):
+        for p in model.parameters():
+            p.requires_grad = flag
 
     def configure_optimizers(self):
         g_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
