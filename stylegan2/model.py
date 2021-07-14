@@ -115,6 +115,10 @@ class EqualConv2d(nn.Module):
             self.bias = None
 
     def forward(self, input):
+        device = input.device
+        self.weight.data = self.weight.data.to(device)
+        if self.bias is not None:
+            self.bias.data = self.bias.data.to(device)
         out = conv2d_gradfix.conv2d(
             input,
             self.weight * self.scale,
@@ -151,8 +155,11 @@ class EqualLinear(pl.LightningModule):
         self.scale = (1 / math.sqrt(in_dim)) * lr_mul
         self.lr_mul = lr_mul
 
-    @auto_move_data # TODO Not ideal but might be working
     def forward(self, input):
+        self.weight.data = self.weight.data.to(self.device)
+        if self.bias is not None:
+            self.bias.data = self.bias.data.to(self.device)
+
         if self.activation:
             out = F.linear(input, self.weight * self.scale)
             out = fused_leaky_relu(out, self.bias * self.lr_mul)

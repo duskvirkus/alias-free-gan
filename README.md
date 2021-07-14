@@ -10,11 +10,14 @@ Still todo:
 - Convert upfindn2d and fused_act to ArrayFire to allow for non gpu usage.
 - Add support for --auto_scale_batch_size
 - get callback tensorboard working
-- @auto_move_data might not be the best so maybe change it if possible
 
 ## Notebooks
 
-coming soon
+### Basic Training Colab Notebook for Alias Free GAN in pytorch lightning
+
+<a href="https://colab.research.google.com/github/duskvirkus/alias-free-gan-pytorch/blob/main/notebooks/AliasFreeGAN_lightning_basic_training.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+A simple notebook for single gpu training on colab. Will likely change and might not be working so use with that in mind.
 
 ## Examples
 

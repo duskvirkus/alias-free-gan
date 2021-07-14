@@ -10,7 +10,7 @@ from stylegan2.op import conv2d_gradfix
 from torch.nn import functional as F
 from torchvision import utils
 
-class AFGAN(pl.LightningModule):
+class AliasFreeGAN(pl.LightningModule):
 
     def __init__(
         self,
@@ -48,25 +48,6 @@ class AFGAN(pl.LightningModule):
             ),
         }
 
-        # self.generator = Generator(
-        #     style_dim=kwargs['size'],
-        #     n_mlp=2,
-        #     kernel_size=3,
-        #     n_taps=6,
-        #     filter_parameters=filter_parameters(
-        #         n_layer=14,
-        #         n_critical=2,
-        #         sr_max=kwargs['size'],
-        #         cutoff_0=2,
-        #         cutoff_n=kwargs['size'] / 2,
-        #         stopband_0=pow(2, 2.1),
-        #         stopband_n=(kwargs['size'] / 2) * pow(2, 0.3),
-        #         channel_max=512,
-        #         channel_base=pow(2, 14)
-        #     ),
-        #     **kwargs
-        # )
-
         self.generator = Generator(
             **generator_args,
             **kwargs
@@ -87,17 +68,18 @@ class AFGAN(pl.LightningModule):
             self.n_samples, self.size
         )
 
+    def on_train_start(self):
+        print(f'\nAlignFreeGAN device: %s\n' % self.device)
+
     def training_step(self, batch, batch_idx, optimizer_idx):
-        # print(f'AFGAN device: %s' % self.device)
-        # print(f'batch shape: %s' % str(batch.shape))
         real = batch
 
         loss = None
 
         # Train generator
         if optimizer_idx == 0:
-            AFGAN._requires_grad(self.generator, True)
-            AFGAN._requires_grad(self.discriminator, False)
+            AliasFreeGAN._requires_grad(self.generator, True)
+            AliasFreeGAN._requires_grad(self.discriminator, False)
             self.generator.eval()
             fake_predict = self._get_fake_predict()
             g_loss = self._g_nonsaturating_loss(fake_predict)
@@ -105,12 +87,12 @@ class AFGAN(pl.LightningModule):
             # return g_loss
             loss = g_loss
             accum = 0.5 ** (32 / (10 * 1000))
-            AFGAN._accumulate(self.g_ema, self.generator, accum)
+            self._accumulate(self.g_ema, self.generator, accum)
 
         # Train discriminator
         if optimizer_idx == 1:
-            AFGAN._requires_grad(self.generator, False)
-            AFGAN._requires_grad(self.discriminator, True)
+            AliasFreeGAN._requires_grad(self.generator, False)
+            AliasFreeGAN._requires_grad(self.discriminator, True)
             self.generator.eval()
             fake_predict = self._get_fake_predict()
             real_predict = self._get_real_predict(real)
@@ -131,8 +113,8 @@ class AFGAN(pl.LightningModule):
 
     def _make_noise(self, latent_dim, n_noise):
         if n_noise == 1:
-            return torch.randn(self.batch, latent_dim)
-        return torch.randn(n_noise, self.batch, latent_dim)
+            return torch.randn(self.batch, latent_dim, device=self.device)
+        return torch.randn(n_noise, self.batch, latent_dim, device=self.device)
 
     def _d_logistic_loss(self, real_pred, fake_pred):
         real_loss = F.softplus(-real_pred)
@@ -169,12 +151,13 @@ class AFGAN(pl.LightningModule):
         for p in model.parameters():
             p.requires_grad = flag
 
-    @staticmethod
-    def _accumulate(model1, model2, decay=0.999):
+    def _accumulate(self, model1, model2, decay=0.999):
         par1 = dict(model1.named_parameters())
         par2 = dict(model2.named_parameters())
 
         for k in par1.keys():
+            par1[k].data = par1[k].data.to(self.device)
+            par2[k].data = par2[k].data.to(self.device)
             par1[k].data.mul_(decay).add_(par2[k].data, alpha=1 - decay)
 
         buf1 = dict(model1.named_buffers())
@@ -208,7 +191,7 @@ class AFGAN(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
-        parser = parent_parser.add_argument_group("AFGAN Model")
+        parser = parent_parser.add_argument_group("AliasFreeGAN Model")
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)

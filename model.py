@@ -9,6 +9,8 @@ from stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu
 
 from typing import Any
 
+import pytorch_lightning as pl
+
 
 def kaiser_attenuation(n_taps, f_h, sr):
     df = (2 * f_h) / (sr / 2)
@@ -87,7 +89,7 @@ def filter_parameters(
     }
 
 
-class FourierFeature(nn.Module):
+class FourierFeature(pl.LightningModule):
     def __init__(self, size, dim, cutoff, eps=1e-8):
         super().__init__()
 
@@ -109,6 +111,7 @@ class FourierFeature(nn.Module):
         coord_w = coord_h.transpose(1, 2)
 
         if affine is not None:
+            affine = affine.to(self.device)
             norm = torch.norm(affine[:, :2], dim=-1, keepdim=True)
             affine = affine / (norm + self.eps)
 
@@ -116,8 +119,10 @@ class FourierFeature(nn.Module):
                 affine.shape[0], 1, 1, 1, affine.shape[-1]
             ).unbind(-1)
 
-            coord_h_orig = coord_h.unsqueeze(0)
-            coord_w_orig = coord_w.unsqueeze(0)
+            coord_h_orig = coord_h.unsqueeze(0).to(self.device)
+            coord_w_orig = coord_w.unsqueeze(0).to(self.device)
+
+            self.lf = self.lf.to(self.device)
 
             coord_h = -coord_w_orig * r_s + coord_h_orig * r_c - t_y * self.lf
             coord_w = coord_w_orig * r_c + coord_h_orig * r_s - t_x * self.lf
@@ -185,7 +190,11 @@ class ModulatedConv2d(nn.Module):
     def forward(self, input, style):
         batch, in_channel, height, width = input.shape
 
+        device = input.device
+        self.weight.data = self.weight.data.to(device)
+
         style = self.modulation(style).view(batch, 1, in_channel, 1, 1)
+        style = style.to(device)
         weight = self.scale * self.weight * style
 
 
