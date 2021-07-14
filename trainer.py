@@ -16,11 +16,11 @@ def cli_main(args=None):
     script_parser = parser.add_argument_group("Trainer Script")
     script_parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
     script_parser.add_argument("--dataset_path", help='Path to dataset. Required!', type=str, required=True)
-    script_parser.add_argument("--iter", help='Number of iterations to train for. (default: %(default)s)', default=800000, type=int)
+    # script_parser.add_argument("--iter", help='Number of iterations to train for. (default: %(default)s)', default=800000, type=int)
     script_parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int)
     # TODO add support for --auto_scale_batch_size
-    script_parser.add_argument("--n_samples", help='Number of samples to generate in training process. (default: %(default)s)', default=32, type=int)
-    script_parser.add_argument("--start_iter", help='Start iteration counter at. Useful for resuming training from a checkpoint. (default: %(default)s)', default=0, type=int)
+    script_parser.add_argument("--n_samples", help='Number of samples to generate in training process. (default: %(default)s)', default=9, type=int)
+    # script_parser.add_argument("--start_iter", help='Start iteration counter at. Useful for resuming training from a checkpoint. (default: %(default)s)', default=0, type=int)
 
     parser = AFGAN.add_model_specific_args(parser)
     parser = pl.Trainer.add_argparse_args(parser)

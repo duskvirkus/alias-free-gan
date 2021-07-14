@@ -8,6 +8,7 @@ from stylegan2.model import Discriminator
 from stylegan2.non_leaking import augment
 from stylegan2.op import conv2d_gradfix
 from torch.nn import functional as F
+from torchvision import utils
 
 class AFGAN(pl.LightningModule):
 
@@ -17,8 +18,12 @@ class AFGAN(pl.LightningModule):
     ):
         super().__init__()
 
+        self.save_hyperparameters()
+
         self.batch = kwargs['batch']
         self.augment = kwargs['augment']
+        self.n_samples = kwargs['n_samples']
+        self.size = kwargs['size']
 
         self.lr_g = kwargs['lr_g']
         self.lr_d = kwargs['lr_d']
@@ -26,18 +31,18 @@ class AFGAN(pl.LightningModule):
 
 
         generator_args = {
-            'style_dim':kwargs['size'],
+            'style_dim':self.size,
             'n_mlp':2,
             'kernel_size':3,
             'n_taps':6,
             'filter_parameters':filter_parameters(
                 n_layer=14,
                 n_critical=2,
-                sr_max=kwargs['size'],
+                sr_max=self.size,
                 cutoff_0=2,
-                cutoff_n=kwargs['size'] / 2,
+                cutoff_n=self.size / 2,
                 stopband_0=pow(2, 2.1),
-                stopband_n=(kwargs['size'] / 2) * pow(2, 0.3),
+                stopband_n=(self.size / 2) * pow(2, 0.3),
                 channel_max=512,
                 channel_base=pow(2, 14)
             ),
@@ -73,14 +78,21 @@ class AFGAN(pl.LightningModule):
         )
 
         self.discriminator = Discriminator(
-            size=kwargs['size'],
+            size=self.size,
             channel_multiplier=2
+        )
+
+        
+        self.sample_z = torch.randn(
+            self.n_samples, self.size
         )
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         # print(f'AFGAN device: %s' % self.device)
         # print(f'batch shape: %s' % str(batch.shape))
         real = batch
+
+        loss = None
 
         # Train generator
         if optimizer_idx == 0:
@@ -90,7 +102,10 @@ class AFGAN(pl.LightningModule):
             fake_predict = self._get_fake_predict()
             g_loss = self._g_nonsaturating_loss(fake_predict)
             # self.generator.zero_grad()
-            return g_loss
+            # return g_loss
+            loss = g_loss
+            accum = 0.5 ** (32 / (10 * 1000))
+            AFGAN._accumulate(self.g_ema, self.generator, accum)
 
         # Train discriminator
         if optimizer_idx == 1:
@@ -101,7 +116,10 @@ class AFGAN(pl.LightningModule):
             real_predict = self._get_real_predict(real)
             d_loss = self._d_logistic_loss(real_predict, fake_predict)
             # self.discriminator.zero_grad()
-            return d_loss
+            # return d_loss
+            loss = d_loss
+
+        return loss
 
     def _get_real_predict(self, real: Tensor) -> Tensor:
         real_img_aug = self._get_real_img_aug(real)
@@ -151,6 +169,23 @@ class AFGAN(pl.LightningModule):
         for p in model.parameters():
             p.requires_grad = flag
 
+    @staticmethod
+    def _accumulate(model1, model2, decay=0.999):
+        par1 = dict(model1.named_parameters())
+        par2 = dict(model2.named_parameters())
+
+        for k in par1.keys():
+            par1[k].data.mul_(decay).add_(par2[k].data, alpha=1 - decay)
+
+        buf1 = dict(model1.named_buffers())
+        buf2 = dict(model2.named_buffers())
+
+        for k in buf1.keys():
+            if "ema_var" not in k:
+                continue
+
+            buf1[k].data.mul_(0).add_(buf2[k].data, alpha=1)
+
     def configure_optimizers(self):
         g_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
         d_optim = optim.Adam(
@@ -159,6 +194,17 @@ class AFGAN(pl.LightningModule):
             betas=(0 ** self.d_reg_ratio, 0.99 ** self.d_reg_ratio),
         )
         return [g_optim, d_optim]
+
+    def training_epoch_end(self, training_step_outputs):
+        self.g_ema.eval()
+        sample = self.g_ema(self.sample_z)
+        utils.save_image(
+            sample,
+            f"sample/{str(self.current_epoch).zfill(6)}.png",
+            nrow=int(self.n_samples ** 0.5),
+            normalize=True,
+            value_range=(-1, 1),
+        )
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
