@@ -180,6 +180,7 @@ class AliasFreeGAN(pl.LightningModule):
 
     def training_epoch_end(self, training_step_outputs):
         self.g_ema.eval()
+        self.sample_z = self.sample_z.to(self.device)
         sample = self.g_ema(self.sample_z)
         utils.save_image(
             sample,
