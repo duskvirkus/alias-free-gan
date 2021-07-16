@@ -19,6 +19,6 @@ runners:
     # See .github/workflows/build-gpu.yml
     count: 1
     # Adding the GPU label, this matches the runs-on param from .github/workflows/build-gpu.yml
-    # So that this runner is selected for running .github/workflows/build-gpu.yml
+    # So that this runner is selected for running .github/workflows/build-gpu.yml 
     labels:
       - gpu
