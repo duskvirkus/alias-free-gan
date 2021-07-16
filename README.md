@@ -7,6 +7,7 @@ This is a fork of Kim Seonghyeon's (rosinality) implementation of Alias-Free Gen
 Still todo:
 
 - Finish conversion to pytorch lightning
+- add checkpoints and resume from checkpoint test / resume from lightning log
 - Convert upfindn2d and fused_act to ArrayFire to allow for non gpu usage.
 - Add support for --auto_scale_batch_size
 - get callback tensorboard working
