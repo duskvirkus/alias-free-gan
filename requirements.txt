@@ -4,3 +4,13 @@ wandb
 ninja
 arrayfire
 pytest
+numpy
+scipy
+nltk
+lmdb
+cython
+pydantic
+pyhocon
+torch==1.9.0+cu102
+torchvision==0.10.0+cu102
+opencv-python-headless

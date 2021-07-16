@@ -13,7 +13,7 @@ runners:
     # preemptible instances seems quite less reliable.
     preemptible: false
     # Path of the relevant workflow file
-    workflow: .github/workflows/build-gpu.yml
+    workflow: .github/workflows/test-gpu.yml
     # Number of runners to provision on every trigger on Actions job
     # 1 because testing on Python 3.9
     # See .github/workflows/build-gpu.yml
