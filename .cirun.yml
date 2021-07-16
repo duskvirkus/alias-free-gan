@@ -1,11 +1,5 @@
 # Self-Hosted Github Action Runners on GCP via Cirun.io
 # Reference: https://docs.cirun.io/reference/yaml.html
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 runners:
   - name: gpu-runner
     # Cloud Provider: GCP
@@ -25,6 +19,6 @@ runners:
     # See .github/workflows/build-gpu.yml
     count: 1
     # Adding the GPU label, this matches the runs-on param from .github/workflows/build-gpu.yml
-    # So that this runner is selected for running .github/workflows/build-gpu.yml 
+    # So that this runner is selected for running .github/workflows/build-gpu.yml
     labels:
       - gpu
