@@ -1,5 +1,11 @@
 # Self-Hosted Github Action Runners on GCP via Cirun.io
 # Reference: https://docs.cirun.io/reference/yaml.html
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 runners:
   - name: gpu-runner
     # Cloud Provider: GCP
