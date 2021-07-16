@@ -1,15 +1,13 @@
-# Self-Hosted Github Action Runners on GCP via Cirun.io
+# Self-Hosted Github Action Runners on AWS via Cirun.io
 # Reference: https://docs.cirun.io/reference/yaml.html
 runners:
   - name: gpu-runner
-    # Cloud Provider: GCP
-    cloud: gcp
-    # Cheapest GPU on GCP
-    gpu: nvidia-tesla-t4
-    # Cheapest VM on GCP, with GPU attachable
-    instance_type: n1-standard-1
-    # Ubuntu-20.4, can be seen from "gcloud compute images list"
-    machine_image: ubuntu-minimal-2004-lts
+    # Cloud Provider: AWS
+    cloud: aws
+    # Cheapest VM on AWS
+    instance_type: t3.nano
+    # Ubuntu-20.4, ami image"
+    machine_image: ami-0e9e1677
     # preemptible instances seems quite less reliable.
     preemptible: false
     # Path of the relevant workflow file
@@ -18,7 +16,3 @@ runners:
     # 1 because testing on Python 3.9
     # See .github/workflows/build-gpu.yml
     count: 1
-    # Adding the GPU label, this matches the runs-on param from .github/workflows/build-gpu.yml
-    # So that this runner is selected for running .github/workflows/build-gpu.yml 
-    labels:
-      - gpu
