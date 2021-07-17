@@ -58,7 +58,7 @@ RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git
 
 RUN conda init bash
 
-RUN $PIP_INSTALL -r pytorch-lightning \
+RUN $PIP_INSTALL pytorch-lightning \
     pytorch-lightning-bolts \
     wandb \
     ninja \
