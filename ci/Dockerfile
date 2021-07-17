@@ -30,21 +30,50 @@ RUN $APT_INSTALL \
 
 RUN apt-get update
 
-RUN $APT_INSTALL python3.7 python3.7-dev
+RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12-Linux-x86_64.sh  && \
+    chmod +x ~/miniconda.sh && \
+    ~/miniconda.sh -b && \
+    rm ~/miniconda.sh
 
-RUN wget -O $HOME/get-pip.py https://bootstrap.pypa.io/get-pip.py
+ENV PATH=/root/miniconda3/bin:$PATH
 
-RUN python3.7 $HOME/get-pip.py
+RUN conda create -y --name container python=$PYTHON_VERSION
 
-RUN ln -s /usr/bin/python3.7 /usr/local/bin/python3
-RUN ln -s /usr/bin/python3.7 /usr/local/bin/python
+# Run the rest of commands within the new conda env.
+# Use absolute path to appease Codefactor.
+SHELL ["/root/miniconda3/bin/conda", "run", "-n", "container", "/bin/bash", "-c"]
+RUN conda install -y python=$PYTHON_VERSION mkl
 
 ENV FORCE_CUDA="1"
 ENV TORCH_CUDA_ARCH_LIST="Pascal;Volta;Turing"
 
 RUN $APT_INSTALL libsm6 libxext6 libxrender1
 
-RUN $PIP_INSTALL -r requirements.txt
+# Clone your repo. Optionally checkout pending code.
+RUN git clone https://github.com/GoogleCloudPlatform/ml-testing-accelerators.git && \
+    cd ml-testing-accelerators && \
+    git fetch origin $GITHUB_REF:CI && \
+    git checkout CI
+
+RUN conda init bash
+
+RUN $PIP_INSTALL -r pytorch-lightning \
+    pytorch-lightning-bolts \
+    wandb \
+    ninja \
+    arrayfire \
+    pytest \
+    numpy \
+    scipy \
+    nltk \
+    lmdb \
+    cython \
+    pydantic \
+    pyhocon \
+    torch==1.9 \
+    torchvision==0.10 \
+    opencv-python-headless \
+    setuptools
 
 RUN python -m pip uninstall -y pillow pil jpeg libtiff libjpeg-turbo
 
@@ -66,7 +95,16 @@ RUN CFLAGS="${CFLAGS} -mavx2" $PIP_INSTALL --force-reinstall --no-binary :all: -
 
 WORKDIR $HOME
 
-RUN ldconfig
-RUN apt-get clean
-RUN apt-get autoremove
-RUN rm -rf /var/lib/apt/lists/* /tmp/* ~/*
+RUN python -c "import pytorch_lighting; print(pytorch_lighting.__version__)"
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["bash"]
+
+
+
+# RUN ldconfig
+# RUN apt-get clean
+# RUN apt-get autoremove
+# RUN rm -rf /var/lib/apt/lists/* /tmp/* ~/*
