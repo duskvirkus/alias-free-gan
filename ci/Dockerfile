@@ -31,6 +31,11 @@ RUN $APT_INSTALL \
 
 RUN apt-get update
 
+ENV FORCE_CUDA="1"
+ENV TORCH_CUDA_ARCH_LIST="Pascal;Volta;Turing"
+
+RUN $APT_INSTALL libsm6 libxext6 libxrender1
+
 RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b && \
@@ -45,10 +50,6 @@ RUN conda create -y --name container python=$PYTHON_VERSION
 SHELL ["/root/miniconda3/bin/conda", "run", "-n", "container", "/bin/bash", "-c"]
 RUN conda install -y python=$PYTHON_VERSION mkl
 
-ENV FORCE_CUDA="1"
-ENV TORCH_CUDA_ARCH_LIST="Pascal;Volta;Turing"
-
-RUN $APT_INSTALL libsm6 libxext6 libxrender1
 
 # Clone your repo. Optionally checkout pending code.
 RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && \
@@ -58,9 +59,8 @@ RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git
 
 RUN conda init bash
 RUN source $HOME/.bashrc
-RUN conda activate container
 
-RUN $PIP_INSTALL pytorch-lightning \
+RUN python -m pip --no-cache-dir install --upgrade pytorch-lightning \
     pytorch-lightning-bolts \
     wandb \
     ninja \
