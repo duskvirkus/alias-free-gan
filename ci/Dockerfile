@@ -57,6 +57,7 @@ RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git
     git checkout CI
 
 RUN conda init bash
+RUN source $HOME/.bashrc
 RUN conda activate container
 
 RUN $PIP_INSTALL pytorch-lightning \
