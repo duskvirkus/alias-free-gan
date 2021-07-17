@@ -22,7 +22,7 @@ jobs:
       - name: Code checkout
         uses: actions/checkout@v2
         with:
-          repository: GoogleCloudPlatform/ml-testing-accelerators
+          repository: duskvirkus/alias-free-gan-pytorch-lightning
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install Go
