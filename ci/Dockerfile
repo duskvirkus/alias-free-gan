@@ -50,7 +50,7 @@ ENV TORCH_CUDA_ARCH_LIST="Pascal;Volta;Turing"
 RUN $APT_INSTALL libsm6 libxext6 libxrender1
 
 # Clone your repo. Optionally checkout pending code.
-RUN git clone https://github.com/GoogleCloudPlatform/ml-testing-accelerators.git && \
+RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && \
     cd ml-testing-accelerators && \
     git fetch origin $GITHUB_REF:CI && \
     git checkout CI
