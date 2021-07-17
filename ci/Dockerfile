@@ -46,27 +46,27 @@ RUN $APT_INSTALL libsm6 libxext6 libxrender1
 
 RUN $PIP_INSTALL -r requirements.txt
 
-RUN python -m pip uninstall -y pillow pil jpeg libtiff libjpeg-turbo
+# RUN python -m pip uninstall -y pillow pil jpeg libtiff libjpeg-turbo
 
-RUN $GIT_CLONE https://github.com/libjpeg-turbo/libjpeg-turbo.git
-WORKDIR libjpeg-turbo
-RUN mkdir build
-WORKDIR build
-RUN cmake -G"Unix Makefiles" -DCMAKE_INSTALL_PREFIX=libjpeg-turbo -DWITH_JPEG8=1 ..
-RUN make
-RUN make install
-WORKDIR libjpeg-turbo
-RUN mv include/jerror.h include/jmorecfg.h include/jpeglib.h include/turbojpeg.h /usr/include
-RUN mv include/jconfig.h /usr/include/x86_64-linux-gnu
-RUN mv lib/*.* /usr/lib/x86_64-linux-gnu
-RUN mv lib/pkgconfig/* /usr/lib/x86_64-linux-gnu/pkgconfig
-RUN ldconfig
+# RUN $GIT_CLONE https://github.com/libjpeg-turbo/libjpeg-turbo.git
+# WORKDIR libjpeg-turbo
+# RUN mkdir build
+# WORKDIR build
+# RUN cmake -G"Unix Makefiles" -DCMAKE_INSTALL_PREFIX=libjpeg-turbo -DWITH_JPEG8=1 ..
+# RUN make
+# RUN make install
+# WORKDIR libjpeg-turbo
+# RUN mv include/jerror.h include/jmorecfg.h include/jpeglib.h include/turbojpeg.h /usr/include
+# RUN mv include/jconfig.h /usr/include/x86_64-linux-gnu
+# RUN mv lib/*.* /usr/lib/x86_64-linux-gnu
+# RUN mv lib/pkgconfig/* /usr/lib/x86_64-linux-gnu/pkgconfig
+# RUN ldconfig
 
-RUN CFLAGS="${CFLAGS} -mavx2" $PIP_INSTALL --force-reinstall --no-binary :all: --compile pillow-simd
+# RUN CFLAGS="${CFLAGS} -mavx2" $PIP_INSTALL --force-reinstall --no-binary :all: --compile pillow-simd
 
-WORKDIR $HOME
+# WORKDIR $HOME
 
-RUN ldconfig
-RUN apt-get clean
-RUN apt-get autoremove
-RUN rm -rf /var/lib/apt/lists/* /tmp/* ~/*
+# RUN ldconfig
+# RUN apt-get clean
+# RUN apt-get autoremove
+# RUN rm -rf /var/lib/apt/lists/* /tmp/* ~/*
