@@ -133,3 +133,6 @@ train_orig.py
 
 datasets
 lightning_logs
+
+cloudflared
+cloudflared-stable-linux-amd64.tgz
