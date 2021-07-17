@@ -30,14 +30,14 @@ RUN $APT_INSTALL \
 
 RUN apt-get update
 
-RUN $APT_INSTALL python3.9 python3.9-dev
+RUN $APT_INSTALL python3.7 python3.7-dev
 
 RUN wget -O $HOME/get-pip.py https://bootstrap.pypa.io/get-pip.py
 
-RUN python3.9 $HOME/get-pip.py
+RUN python3.7 $HOME/get-pip.py
 
-RUN ln -s /usr/bin/python3.9 /usr/local/bin/python3
-RUN ln -s /usr/bin/python3.9 /usr/local/bin/python
+RUN ln -s /usr/bin/python3.7 /usr/local/bin/python3
+RUN ln -s /usr/bin/python3.7 /usr/local/bin/python
 
 ENV FORCE_CUDA="1"
 ENV TORCH_CUDA_ARCH_LIST="Pascal;Volta;Turing"
