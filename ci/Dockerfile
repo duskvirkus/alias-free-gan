@@ -24,13 +24,14 @@ RUN $APT_INSTALL \
     zlib1g-dev \
     nasm \
     cmake \
-    curl
+    curl \
+    apt-utils
 
 # RUN add-apt-repository ppa:deadsnakes/ppa
 
 RUN apt-get update
 
-RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12-Linux-x86_64.sh  && \
+RUN curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b && \
     rm ~/miniconda.sh
@@ -51,7 +52,7 @@ RUN $APT_INSTALL libsm6 libxext6 libxrender1
 
 # Clone your repo. Optionally checkout pending code.
 RUN git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && \
-    cd ml-testing-accelerators && \
+    cd alias-free-gan-pytorch-lightning && \
     git fetch origin $GITHUB_REF:CI && \
     git checkout CI
 
