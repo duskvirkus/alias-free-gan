@@ -23,12 +23,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: duskvirkus/alias-free-gan-pytorch-lightning
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.14.x
+          ref: ${{ github.event.pull_request.head.sha }
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@master
@@ -37,53 +32,26 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
+      - name: Create test instance
+        run: gcloud compute instances create test-instance --source-instance-template aliasfreegan-test-template --zone us-central1-f
 
-      - name: Use gcloud CLI
-        run: gcloud info
+      - name: Install nvidia drivers
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
 
-      - name: Configure Docker
-        run: |-
-          gcloud --quiet auth configure-docker
-        shell: bash
+      - name: Clone repo
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
 
-      - name: Build and Push Docker Image
-        run: |
-          cd ci
-          docker build --tag "$IMAGE:$GITHUB_RUN_ID" -f Dockerfile --build-arg "GITHUB_REF=$GITHUB_REF" .
-          docker push "$IMAGE:$GITHUB_RUN_ID"
-        shell: bash
+      - name: pip install
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && pip install -r requirements.txt"
 
-      - name: Install jsonnet
-        run: |-
-          go get github.com/google/go-jsonnet/cmd/jsonnet
-        shell: bash
+      - name: pytest
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && python -m pytest test/unit/alias_free_gan_test.py"
 
-      - name: Get cluster credentials
-        run: |-
-          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --region "$GKE_LOCATION"
+      - name: Stop test-instance
+        if: always()
+        run: gcloud compute instances stop test-instance --zone us-central1-f
 
-      - name: Deploy the job on the kubernetes cluster
-        run: |-
-          job_name=$(jsonnet -J . ci_pytorch/gpu_test.jsonnet --ext-str image=$IMAGE --ext-str image-tag=$IMAGE_TAG | kubectl create -f -) && \
-          job_name=${job_name#job.batch/} && \
-          job_name=${job_name% created} && \
-          echo "Waiting on kubernetes job: $job_name" && \
-          i=0 && \
-          status_code=2 && \
-          # Check on the job periodically. Set the status code depending on what
-          # happened to the job in Kubernetes. If we try MAX_CHECKS times and
-          # still the job hasn't finished, give up and return the starting
-          # non-zero status code.
-          while [ $i -lt $MAX_CHECKS ]; do ((i++)); if kubectl get jobs $job_name -o jsonpath='Failed:{.status.failed}' | grep "Failed:1"; then status_code=1 && break; elif kubectl get jobs $job_name -o jsonpath='Succeeded:{.status.succeeded}' | grep "Succeeded:1" ; then status_code=0 && break; else printf "." ; fi; sleep $CHECK_SPEED; done && \
-          echo "Done waiting. Job status code: $status_code" && \
-          pod_name=$(kubectl get po -l controller-uid=`kubectl get job $job_name -o "jsonpath={.metadata.labels.controller-uid}"` | awk 'match($0,!/NAME/) {print $1}') && \
-          echo "GKE pod name: $pod_name" && \
-          kubectl logs -f $pod_name --container=train && \
-          echo "Done with log retrieval attempt." && \
-          # Uncomment this line if building a single-use testing Docker image.
-          # gcloud container images delete "$IMAGE:$GITHUB_RUN_ID" --force-delete-tags && \
-          exit $status_code
-        shell: bash
-
-
+      - name: Delete test-instance
+        if: always()
+        run: echo "y\n" | gcloud compute instances delete test-instance --zone us-central1-f
       
