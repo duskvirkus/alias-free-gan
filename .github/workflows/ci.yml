@@ -33,19 +33,22 @@ jobs:
           export_default_credentials: true
 
       - name: Create test-instance
-        run: gcloud compute instances create test-instance --source-instance-template aliasfreegan-test-template --zone us-central1-f
+        run: gcloud compute instances create ci-test-instance --source-instance-template ci-test-template --zone us-central1-f
 
       - name: Install nvidia drivers
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
 
       - name: Conda Init
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "conda init"
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "/opt/conda/bin/conda init"
 
-      - name: Clone repo and pip install
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch && pip install -r requirements.txt"
+      - name: Clone repo
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
+
+      - name: pip install
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/pip install -r requirements.txt"
 
       - name: pytest
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && python -m pytest test/unit/alias_free_gan_test.py"
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
 
       - name: Stop test-instance
         if: always()
