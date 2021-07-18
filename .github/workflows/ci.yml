@@ -38,14 +38,11 @@ jobs:
       - name: Install nvidia drivers
         run: gcloud compute ssh test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
 
-      - name: Clone repo
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
+      - name: Conda Init
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "conda init"
 
-      - name: pip install
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "pip freeze"
-
-      - name: pip install
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning/ci && pip install -r requirements.txt"
+      - name: Clone repo and pip install
+        run: gcloud compute ssh test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch && pip install -r requirements.txt"
 
       - name: pytest
         run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && python -m pytest test/unit/alias_free_gan_test.py"
