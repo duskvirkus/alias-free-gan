@@ -48,13 +48,13 @@ jobs:
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/pip install -r requirements.txt"
 
       - name: pytest
-        run: gcloud compute ssh test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
 
       - name: Stop test-instance
         if: always()
-        run: gcloud compute instances stop test-instance --zone us-central1-f
+        run: gcloud compute instances stop ci-test-instance --zone us-central1-f
 
       - name: Delete test-instance
         if: always()
-        run: echo "y\n" | gcloud compute instances delete test-instance --zone us-central1-f
+        run: echo "y\n" | gcloud compute instances delete ci-test-instance --zone us-central1-f
       
