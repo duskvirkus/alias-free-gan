@@ -48,7 +48,7 @@ jobs:
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/pip install -r requirements.txt"
 
       - name: pytest
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
 
       - name: Stop test-instance
         if: always()
