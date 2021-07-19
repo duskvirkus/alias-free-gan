@@ -1,4 +1,4 @@
-name: CI
+name: CI pytest on GPU Google Cloud Instance
 
 on:
   push:
@@ -6,55 +6,42 @@ on:
   pull_request:
    branches: [ main ]
 
-env:
-  GKE_LOCATION: us-central1
-  IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/aliasfreegan
-  IMAGE_TAG: $GITHUB_RUN_ID
-  MAX_CHECKS: 120
-  CHECK_SPEED: 15
-
 jobs:
   alias-free-gan-test:
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Code checkout
-        uses: actions/checkout@v2
-        with:
-          repository: duskvirkus/alias-free-gan-pytorch-lightning
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Set up Cloud SDK
+      - name: setup google cloud sdk
         uses: google-github-actions/setup-gcloud@master
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Create test-instance
+      - name: ci-test-instance | create
         run: gcloud compute instances create ci-test-instance --source-instance-template ci-test-template --zone us-central1-f
 
-      - name: Install nvidia drivers
+      - name: ci-test-instance | install nvidia drivers
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
 
-      - name: Conda Init
+      - name: ci-test-instance | init anaconda
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "/opt/conda/bin/conda init"
 
-      - name: Clone repo
+      - name: ci-test-instance | clone repository
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
 
-      - name: pip install
+      - name: ci-test-instance | pip install -r requirements.txt
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/pip install -r requirements.txt"
 
-      - name: pytest
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && /opt/conda/bin/python -m pytest test/unit/alias_free_gan_test.py"
+      - name: ci-test-instance | run pytest
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && python -m pytest test/unit/alias_free_gan_test.py"
 
-      - name: Stop test-instance
+      - name: ci-test-instance | stop
         if: always()
         run: gcloud compute instances stop ci-test-instance --zone us-central1-f
 
-      - name: Delete test-instance
+      - name: ci-test-instance | delete
         if: always()
         run: echo "y\n" | gcloud compute instances delete ci-test-instance --zone us-central1-f
       

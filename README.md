@@ -1,10 +1,8 @@
 # Alias-Free GAN Pytorch Lightning
 
+![example workflow](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci-gpu.yml/badge.svg)
+
 This is a fork of Kim Seonghyeon's (rosinality) implementation of Alias-Free Generative Adversarial Networks (https://arxiv.org/abs/2106.12423). This version has been adapted to pytorch lightning. The result can be used on a wider variety of hardware including TPUs.
-
-CI Tests:
-
-![example workflow](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg)
 
 ⚠️ Incomplete Project ⚠️
 
