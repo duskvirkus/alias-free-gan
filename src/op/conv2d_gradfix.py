@@ -21,7 +21,7 @@ def no_weight_gradients():
 
 
 def conv2d(
-    input_val: torch.Tensor,
+    in_tensor: torch.Tensor,
     weight: torch.Tensor,
     bias: torch.Tensor = None,
     stride: int = 1,
@@ -29,7 +29,7 @@ def conv2d(
     dilation: int = 1,
     groups:int = 1
 ) -> torch.Tensor:
-    if could_use_op(input_val):
+    if could_use_op(in_tensor):
         return conv2d_gradfix(
             transpose=False,
             weight_shape=weight.shape,
@@ -38,10 +38,10 @@ def conv2d(
             output_padding=0,
             dilation=dilation,
             groups=groups,
-        ).apply(input_val, weight, bias)
+        ).apply(in_tensor, weight, bias)
 
     return F.conv2d(
-        input=input_val,
+        input=in_tensor,
         weight=weight,
         bias=bias,
         stride=stride,
@@ -52,7 +52,7 @@ def conv2d(
 
 
 def conv_transpose2d(
-    input_val: torch.Tensor,
+    in_tensor: torch.Tensor,
     weight: torch.Tensor,
     bias: torch.Tensor = None,
     stride: int = 1,
@@ -61,7 +61,7 @@ def conv_transpose2d(
     groups: int = 1,
     dilation: int = 1,
 ) -> torch.Tensor:
-    if could_use_op(input_val):
+    if could_use_op(in_tensor):
         return conv2d_gradfix(
             transpose=True,
             weight_shape=weight.shape,
@@ -70,10 +70,10 @@ def conv_transpose2d(
             output_padding=output_padding,
             groups=groups,
             dilation=dilation,
-        ).apply(input_val, weight, bias)
+        ).apply(in_tensor, weight, bias)
 
     return F.conv_transpose2d(
-        input=input_val,
+        input=in_tensor,
         weight=weight,
         bias=bias,
         stride=stride,
@@ -84,11 +84,11 @@ def conv_transpose2d(
     )
 
 
-def could_use_op(input_val: torch.Tensor) -> bool:
+def could_use_op(in_tensor: torch.Tensor) -> bool:
     if (not enabled) or (not torch.backends.cudnn.enabled):
         return False
 
-    if input_val.device.type != "cuda":
+    if in_tensor.device.type != "cuda":
         # TODO see if this file really needs cuda or can be converted to arrayfire
         return False
 
@@ -135,12 +135,12 @@ def conv2d_gradfix(
         stride=stride, padding=padding, dilation=dilation, groups=groups
     )
 
-    def calc_output_padding(input_val_shape: tuple, output_shape: tuple) -> tuple:
+    def calc_output_padding(in_tensor_shape: tuple, output_shape: tuple) -> tuple:
         if transpose:
             return [0, 0]
 
         return [
-            input_val_shape[i + 2]
+            in_tensor_shape[i + 2]
             - (output_shape[i + 2] - 1) * stride[i]
             - (1 - 2 * padding[i])
             - dilation[i] * (weight_shape[i + 2] - 1)
@@ -149,50 +149,50 @@ def conv2d_gradfix(
 
     class Conv2d(autograd.Function):
         @staticmethod
-        def forward(ctx, input_val: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
+        def forward(ctx, in_tensor: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
             if not transpose:
-                out = F.conv2d(input=input_val, weight=weight, bias=bias, **common_kwargs)
+                out = F.conv2d(input=in_tensor, weight=weight, bias=bias, **common_kwargs)
 
             else:
                 out = F.conv_transpose2d(
-                    input=input_val,
+                    input=in_tensor,
                     weight=weight,
                     bias=bias,
                     output_padding=output_padding,
                     **common_kwargs,
                 )
 
-            ctx.save_for_backward(input_val, weight)
+            ctx.save_for_backward(in_tensor, weight)
 
             return out
 
         @staticmethod
         def backward(ctx, grad_output):
-            input_val, weight = ctx.saved_tensors
-            grad_input_val, grad_weight, grad_bias = None, None, None
+            in_tensor, weight = ctx.saved_tensors
+            grad_in_tensor, grad_weight, grad_bias = None, None, None
 
-            if ctx.needs_input_val_grad[0]:
+            if ctx.needs_in_tensor_grad[0]:
                 p = calc_output_padding(
-                    input_val_shape=input_val.shape, output_shape=grad_output.shape
+                    in_tensor_shape=in_tensor.shape, output_shape=grad_output.shape
                 )
-                grad_input_val = conv2d_gradfix(
+                grad_in_tensor = conv2d_gradfix(
                     transpose=(not transpose),
                     weight_shape=weight_shape,
                     output_padding=p,
                     **common_kwargs,
                 ).apply(grad_output, weight, None)
 
-            if ctx.needs_input_val_grad[1] and not weight_gradients_disabled:
-                grad_weight = Conv2dGradWeight.apply(grad_output, input_val)
+            if ctx.needs_in_tensor_grad[1] and not weight_gradients_disabled:
+                grad_weight = Conv2dGradWeight.apply(grad_output, in_tensor)
 
-            if ctx.needs_input_val_grad[2]:
+            if ctx.needs_in_tensor_grad[2]:
                 grad_bias = grad_output.sum((0, 2, 3))
 
-            return grad_input_val, grad_weight, grad_bias
+            return grad_in_tensor, grad_weight, grad_bias
 
     class Conv2dGradWeight(autograd.Function):
         @staticmethod
-        def forward(ctx, grad_output, input_val: torch.Tensor):
+        def forward(ctx, grad_output, in_tensor: torch.Tensor):
             op = torch._C._jit_get_operation(
                 "aten::cudnn_convolution_backward_weight"
                 if not transpose
@@ -206,37 +206,37 @@ def conv2d_gradfix(
             grad_weight = op(
                 weight_shape,
                 grad_output,
-                input_val,
+                in_tensor,
                 padding,
                 stride,
                 dilation,
                 groups,
                 *flags,
             )
-            ctx.save_for_backward(grad_output, input_val)
+            ctx.save_for_backward(grad_output, in_tensor)
 
             return grad_weight
 
         @staticmethod
         def backward(ctx, grad_grad_weight):
-            grad_output, input_val = ctx.saved_tensors
-            grad_grad_output, grad_grad_input_val = None, None
+            grad_output, in_tensor = ctx.saved_tensors
+            grad_grad_output, grad_grad_in_tensor = None, None
 
-            if ctx.needs_input_val_grad[0]:
-                grad_grad_output = Conv2d.apply(input_val, grad_grad_weight, None)
+            if ctx.needs_in_tensor_grad[0]:
+                grad_grad_output = Conv2d.apply(in_tensor, grad_grad_weight, None)
 
-            if ctx.needs_input_val_grad[1]:
+            if ctx.needs_in_tensor_grad[1]:
                 p = calc_output_padding(
-                    input_val_shape=input_val.shape, output_shape=grad_output.shape
+                    in_tensor_shape=in_tensor.shape, output_shape=grad_output.shape
                 )
-                grad_grad_input_val = conv2d_gradfix(
+                grad_grad_in_tensor = conv2d_gradfix(
                     transpose=(not transpose),
                     weight_shape=weight_shape,
                     output_padding=p,
                     **common_kwargs,
                 ).apply(grad_output, grad_grad_weight, None)
 
-            return grad_grad_output, grad_grad_input_val
+            return grad_grad_output, grad_grad_in_tensor
 
     conv2d_gradfix_cache[key] = Conv2d
 
