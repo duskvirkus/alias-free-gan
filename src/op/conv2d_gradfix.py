@@ -8,6 +8,7 @@ from torch.nn import functional as F
 enabled = True
 weight_gradients_disabled = False
 
+# TODO finish type hinting this file
 
 @contextlib.contextmanager
 def no_weight_gradients():
@@ -88,6 +89,7 @@ def could_use_op(input_val: torch.Tensor) -> bool:
         return False
 
     if input_val.device.type != "cuda":
+        # TODO see if this file really needs cuda or can be converted to arrayfire
         return False
 
     if any(torch.__version__.startswith(x) for x in ["1.7.", "1.8."]):
