@@ -7,7 +7,13 @@ from torch.autograd import Function
 
 import arrayfire as af
 
-def upfirdn2d(input, kernel, up=1, down=1, pad=(0, 0)):
+def upfirdn2d(
+    input: torch.Tensor,
+    kernel: torch.Tensor,
+    up = 1,
+    down = 1,
+    pad = (0, 0)
+) -> torch.Tensor:
     if not isinstance(up, abc.Iterable):
         up = (up, up)
 
@@ -98,6 +104,6 @@ def upfirdn2d_af(
     input = af.to_array(input)
     kernel = af.to_array(kernel)
 
-    
+
 
 

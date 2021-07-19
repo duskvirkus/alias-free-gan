@@ -147,6 +147,10 @@ class UpFirDn2d(Function):
 
 
 def upfirdn2d(input, kernel, up=1, down=1, pad=(0, 0)):
+    print(f'input.shape={input.shape}')
+    print(f'kernel.shape={kernel.shape}')
+    print(f'up={up}, down={down}, pad={pad}')
+
     if not isinstance(up, abc.Iterable):
         up = (up, up)
 

@@ -4,11 +4,14 @@ import os
 import torch
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
+
 import src.op as arrayfire_op
 import src.op.conv2d_gradfix as arrayfire_op_conv2d_gradfix
+import src.op.upfirdn2d as arrayfire_op_upfirdn2d
 
 import src.stylegan2.op as cuda_op
 import src.stylegan2.op.conv2d_gradfix as cuda_op_conv2d_gradfix
+import src.stylegan2.op.upfirdn2d as cuda_op_upfirdn2d
 
 class TestOp():
     '''
@@ -95,6 +98,88 @@ class TestOp():
                 paddings[i],
                 1,
                 groups[i]
+            )
+
+            assert(cuda_result.shape == arrayfire_result.shape)
+            assert(torch.allclose(cuda_result, arrayfire_result))
+            assert(cuda_result.dtype == arrayfire_result.dtype)
+
+
+    def test_upfindn2d(self):
+
+        # actual input
+        # input.shape=torch.Size([12, 128, 84, 336])
+        # kernel.shape=torch.Size([24, 1])
+        # up=(1, 4), down=1, pad=(0, 0, 13, 10)
+        # input.shape=torch.Size([12, 128, 336, 336])
+        # kernel.shape=torch.Size([1, 12])
+        # up=1, down=(2, 1), pad=(5, 5, 0, 0)
+        # input.shape=torch.Size([12, 128, 336, 168])
+        # kernel.shape=torch.Size([12, 1])
+        # up=1, down=(1, 2), pad=(0, 0, 5, 5)
+        # input.shape=torch.Size([12, 128, 148, 148])
+        # kernel.shape=torch.Size([1, 12])
+        # up=(2, 1), down=1, pad=(6, 5, 0, 0)
+        # input.shape=torch.Size([12, 128, 148, 296])
+        # kernel.shape=torch.Size([12, 1])
+        # up=(1, 2), down=1, pad=(0, 0, 6, 5)
+
+        in_tensors = [
+            torch.rand(12, 128, 84, 336),
+            torch.rand(12, 128, 336, 336),
+            torch.rand(12, 128, 336, 168),
+            torch.rand(12, 128, 148, 148),
+            torch.rand(12, 128, 148, 296)
+        ]
+        kernels = [
+            torch.rand(24, 1),
+            torch.rand(1, 12),
+            torch.rand(12, 1),
+            torch.rand(1, 12),
+            torch.rand(12, 1)
+        ]
+        ups = [
+            (1, 4),
+            1,
+            1,
+            (2, 1),
+            (1, 2),
+        ]
+        downs = [
+            1,
+            (2, 1),
+            (1, 2),
+            1,
+            1,
+        ]
+        pads = [
+            (0, 0, 13, 10),
+            (5, 5, 0, 0),
+            (0, 0, 5, 5),
+            (6, 5, 0, 0),
+            (0, 0, 6, 5)
+        ]
+
+        assert(len(in_tensors) == len(kernels))
+        assert(len(in_tensors) == len(ups))
+        assert(len(in_tensors) == len(downs))
+        assert(len(in_tensors) == len(pads))
+
+        for i in range(len(in_tensors)):
+            cuda_result = cuda_op_upfirdn2d.upfirdn2d(
+                in_tensors[i],
+                kernels[i],
+                ups[i],
+                downs[i],
+                pads[i]
+            )
+
+            arrayfire_result = arrayfire_op_upfirdn2d.upfirdn2d(
+                in_tensors[i],
+                kernels[i],
+                ups[i],
+                downs[i],
+                pads[i]
             )
 
             assert(cuda_result.shape == arrayfire_result.shape)

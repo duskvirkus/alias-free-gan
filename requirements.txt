@@ -2,7 +2,7 @@ pytorch-lightning
 pytorch-lightning-bolts
 wandb
 ninja
-arrayfire
+# arrayfire
 pytest
 numpy
 scipy
