@@ -19,8 +19,8 @@ def no_weight_gradients():
     weight_gradients_disabled = old
 
 
-def conv2d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
-    if could_use_op(input):
+def conv2d(in_tensor: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor = None, stride: int = 1, padding: int = 0, dilation: int = 1, groups:int = 1) -> torch.Tensor:
+    if could_use_op(in_tensor):
         return conv2d_gradfix(
             transpose=False,
             weight_shape=weight.shape,
@@ -29,10 +29,10 @@ def conv2d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
             output_padding=0,
             dilation=dilation,
             groups=groups,
-        ).apply(input, weight, bias)
+        ).apply(in_tensor, weight, bias)
 
     return F.conv2d(
-        input=input,
+        input=in_tensor,
         weight=weight,
         bias=bias,
         stride=stride,
