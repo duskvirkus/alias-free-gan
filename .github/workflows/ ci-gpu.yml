@@ -31,11 +31,11 @@ jobs:
       - name: ci-test-instance | clone repository
         run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
 
-      - name: ci-test-instance | pip install -r requirements.txt
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "cd alias-free-gan-pytorch-lightning && /opt/conda/bin/pip install -r requirements.txt"
+      - name: ci-test-instance | install.py
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && python install.py"
 
       - name: ci-test-instance | run pytest
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && python -m pytest test/unit/alias_free_gan_test.py"
+        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:$PATH && cd alias-free-gan-pytorch-lightning && python -m pytest"
 
       - name: ci-test-instance | stop
         if: always()
