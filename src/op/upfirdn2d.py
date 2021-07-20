@@ -23,7 +23,7 @@ def upfirdn2d(
     if len(pad) == 2:
         pad = (pad[0], pad[1], pad[0], pad[1])
 
-    return upfirdn2d_af(input, kernel, up, down, pad)
+    return upfirdn2d_af(input, kernel, up[0], up[1], down[0], down[1], pad[0], pad[1], pad[2], pad[3])
 
 
 
@@ -103,6 +103,8 @@ def upfirdn2d_af(
     # numpy arrays to af arrays
     input = af.to_array(input)
     kernel = af.to_array(kernel)
+
+    return torch.rand(1)
 
 
 

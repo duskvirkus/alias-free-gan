@@ -7,11 +7,11 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."
 
 import src.op as arrayfire_op
 import src.op.conv2d_gradfix as arrayfire_op_conv2d_gradfix
-import src.op.upfirdn2d as arrayfire_op_upfirdn2d
+# import src.op.upfirdn2d as arrayfire_op_upfirdn2d
 
 import src.stylegan2.op as cuda_op
 import src.stylegan2.op.conv2d_gradfix as cuda_op_conv2d_gradfix
-import src.stylegan2.op.upfirdn2d as cuda_op_upfirdn2d
+# import src.stylegan2.op.upfirdn2d as cuda_op_upfirdn2d
 
 class TestOp():
     '''
@@ -166,7 +166,7 @@ class TestOp():
         assert(len(in_tensors) == len(pads))
 
         for i in range(len(in_tensors)):
-            cuda_result = cuda_op_upfirdn2d.upfirdn2d(
+            cuda_result = cuda_op.upfirdn2d(
                 in_tensors[i],
                 kernels[i],
                 ups[i],
@@ -174,7 +174,7 @@ class TestOp():
                 pads[i]
             )
 
-            arrayfire_result = arrayfire_op_upfirdn2d.upfirdn2d(
+            arrayfire_result = arrayfire_op.upfirdn2d(
                 in_tensors[i],
                 kernels[i],
                 ups[i],
