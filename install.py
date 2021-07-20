@@ -65,5 +65,5 @@ if __name__ == '__main__':
 
     install(_all_)
 
-    cuda_version = get_cuda_version()
-    install_arrayfire_wheel(cuda_version)
+    # cuda_version = get_cuda_version()
+    # install_arrayfire_wheel(cuda_version)
