@@ -2,13 +2,17 @@ import math
 import random
 import functools
 import operator
+import os
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.autograd import Function
 
-from .op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
+if os.environ['USE_CPU_OP']:
+  from ..op import fused_leaky_relu, upfirdn2d, conv2d_gradfix
+else:
+    from .op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
 
 import pytorch_lightning as pl
 from pytorch_lightning.core.decorators import auto_move_data

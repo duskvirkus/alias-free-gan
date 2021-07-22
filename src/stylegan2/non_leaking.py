@@ -1,4 +1,5 @@
 import math
+import os
 
 import torch
 from torch import autograd
@@ -6,7 +7,11 @@ from torch.nn import functional as F
 import numpy as np
 
 from .distributed import reduce_sum
-from .op import upfirdn2d
+
+if os.environ['USE_CPU_OP']:
+    from ..op import upfirdn2d
+else:
+    from .op import upfirdn2d
 
 
 class AdaptiveAugment:

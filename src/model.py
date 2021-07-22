@@ -1,5 +1,6 @@
 import math
 from typing import Any
+import os
 
 import torch
 from torch import nn
@@ -8,7 +9,11 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 
 from src.stylegan2.model import PixelNorm, EqualLinear, EqualConv2d
-from src.stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu
+
+if os.environ['USE_CPU_OP']:
+  from src.op import fused_leaky_relu, upfirdn2d, conv2d_gradfix
+else:
+    from src.stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu
 
 def kaiser_attenuation(n_taps, f_h, sr):
     df = (2 * f_h) / (sr / 2)
