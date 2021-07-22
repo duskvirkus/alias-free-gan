@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from torch.autograd import Function
 
 if 'USE_CPU_OP' in os.environ:
-  from ..op import fused_leaky_relu, upfirdn2d, conv2d_gradfix
+  from ..op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
 else:
     from .op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
 
