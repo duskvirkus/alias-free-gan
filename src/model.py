@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 
 from src.stylegan2.model import PixelNorm, EqualLinear, EqualConv2d
 
-if os.environ['USE_CPU_OP']:
+if 'USE_CPU_OP' in os.environ:
   from src.op import fused_leaky_relu, upfirdn2d, conv2d_gradfix
 else:
     from src.stylegan2.op import conv2d_gradfix, upfirdn2d, fused_leaky_relu

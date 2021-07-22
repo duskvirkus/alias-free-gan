@@ -20,6 +20,8 @@ _all_ = [
     "setuptools",
     "pytorch==1.9",
     "torchvision==0.10",
+    "cloud-tpu-client==0.10",
+    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
 ]
 
 def install(packages):

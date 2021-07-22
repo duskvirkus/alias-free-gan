@@ -13,7 +13,7 @@ from src.model import Generator, filter_parameters
 from src.stylegan2.model import Discriminator
 from src.stylegan2.non_leaking import augment
 
-if os.environ['USE_CPU_OP']:
+if 'USE_CPU_OP' in os.environ:
     from src.op import conv2d_gradfix
 else:
     from src.stylegan2.op import conv2d_gradfix

@@ -8,7 +8,7 @@ import numpy as np
 
 from .distributed import reduce_sum
 
-if os.environ['USE_CPU_OP']:
+if 'USE_CPU_OP' in os.environ:
     from ..op import upfirdn2d
 else:
     from .op import upfirdn2d
