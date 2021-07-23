@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
 from src.alias_free_gan import AliasFreeGAN
 
 class TestAliasFreeGAN():
