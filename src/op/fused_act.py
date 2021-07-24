@@ -1,7 +1,36 @@
 import os
 
 import torch
+from torch import nn
 from torch.nn import functional as F
+
+import pytorch_lightning as pl
+
+# TODO finish type hinting
+# TODO write unit test for FusedLeakyReLU
+
+class FusedLeakyReLU(pl.LightningModule):
+    def __init__(
+        self,
+        channel,
+        bias=True,
+        negative_slope: float = 0.2,
+        scale: float = 2 ** 0.5
+    ):
+        super().__init__()
+
+        if bias:
+            self.bias = nn.Parameter(torch.zeros(channel))
+
+        else:
+            self.bias = None
+
+        self.negative_slope = negative_slope
+        self.scale = scale
+
+    def forward(self, input):
+        self.bias.data = self.bias.data.to(self.device)
+        return fused_leaky_relu(input, self.bias, self.negative_slope, self.scale)
 
 def fused_leaky_relu(
     in_tensor: torch.Tensor,

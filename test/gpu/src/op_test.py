@@ -3,7 +3,7 @@ import os
 
 import torch
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
 
 import src.op as arrayfire_op
 import src.op.conv2d_gradfix as arrayfire_op_conv2d_gradfix

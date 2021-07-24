@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from typing import Any
+import os
 
 import torch
 from torch import optim, Tensor
@@ -11,7 +12,11 @@ import pytorch_lightning as pl
 from src.model import Generator, filter_parameters
 from src.stylegan2.model import Discriminator
 from src.stylegan2.non_leaking import augment
-from src.stylegan2.op import conv2d_gradfix
+
+if 'USE_CPU_OP' in os.environ:
+    from src.op import conv2d_gradfix
+else:
+    from src.stylegan2.op import conv2d_gradfix
 
 class AliasFreeGAN(pl.LightningModule):
 

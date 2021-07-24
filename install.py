@@ -18,14 +18,20 @@ _all_ = [
     "pyhocon",
     "opencv-python-headless",
     "setuptools",
+]
+
+non_ci = [
     "pytorch==1.9",
     "torchvision==0.10",
+    "cloud-tpu-client==0.10",
+    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
 ]
 
 def install(packages):
+    all_packages = ''
     for package in packages:
-        os.system(f'python -m pip install {package}')
-
+        all_packages += package + ' '
+    os.system(f'python -m pip install {all_packages}')
 
 def get_cuda_version():
     path = '/usr/local/cuda/version.txt'
@@ -64,6 +70,9 @@ def install_arrayfire_wheel(cuda_version):
 if __name__ == '__main__':
 
     install(_all_)
+
+    if 'CI_RUNNING' not in os.environ:
+        install(non_ci)
 
     # cuda_version = get_cuda_version()
     # install_arrayfire_wheel(cuda_version)

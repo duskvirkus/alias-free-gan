@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+   branches: [ main ]
+  pull_request:
+   branches: [ main ]
+
+jobs:
+  gpu-pytest-on-gcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: setup google cloud sdk
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: create ci-gpu-instance
+        run: |
+          (gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-a && \
+          echo "::set-output name=INSTANCE_ZONE::us-central1-a") || \
+          (gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-b && \
+          echo "::set-output name=INSTANCE_ZONE::us-central1-b") || \
+          (gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-c && \
+          echo "::set-output name=INSTANCE_ZONE::us-central1-c") || \
+          (gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-f && \
+          echo "::set-output name=INSTANCE_ZONE::us-central1-f")
+        id: create-ci-gpu-instance
+
+      - name: ci-gpu-instance | install nvidia drivers
+        run: |
+          gcloud compute ssh ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "sudo /opt/deeplearning/install-driver.sh"
+
+      - name: ci-gpu-instance | clone repository
+        run: |
+          gcloud compute ssh ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-gpu-branch && git checkout ci-gpu-branch"
+
+      - name: ci-gpu-instance | install.py
+        run: |
+          gcloud compute ssh ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
+
+      - name: ci-gpu-instance | run pytest (cross and gpu tests)
+        run: |
+          gcloud compute ssh ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
+
+      - name: stop ci-gpu-instance
+        if: always()
+        run: |
+          gcloud compute instances stop ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }}
+
+      - name: delete ci-gpu-instance
+        if: always()
+        run: |
+          echo "y\n" | gcloud compute instances delete ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }}
+
+  tpus-pytest-on-gcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: setup google cloud sdk
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: create ci-tpu-instance and ci-tpu-node
+        run: |
+          ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-a --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-a || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-a --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-a" \
+          ) || ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-b --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-b || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-b --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' && \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-b" \
+          ) || ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-c --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-c || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-c --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' && \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-c" \
+          )
+        id: create-ci-tpu-instance
+
+      - name: get tpu config and set for later use
+        run: |
+          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep ipAddress | awk '{print $2}')"
+          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep ipAddress | awk '{print $2}'):$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep port | awk '{print $2}')"
+        id: tpu-config
+
+      - name: ci-tpu-instance | clone repository
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
+
+      - name: ci-tpu-instance | install.py
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
+
+      - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"${{ steps.tpu-config.outputs.TPU_IP_ADDRESS }}\" && export XRT_TPU_CONFIG=\"${{ steps.tpu-config.outputs.XRT_TPU_CONFIG }}\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
+
+      - name: cleanup ci-tpu-instance
+        if: always()
+        run: |
+          gcloud compute instances stop ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
+          echo "y\n" | gcloud compute instances delete ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
+
+      - name: cleanup ci-tpu-node
+        if: always()
+        run: |
+          gcloud compute tpus stop ci-tpu-node \
+            --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
+          gcloud compute tpus delete ci-tpu-node \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --quiet
+
+      

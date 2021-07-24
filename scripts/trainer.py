@@ -14,8 +14,6 @@ from src.stylegan2.dataset import MultiResolutionDataset
 
 def cli_main(args=None):
 
-    print(args)
-
     parser = ArgumentParser()
 
     script_parser = parser.add_argument_group("Trainer Script")
@@ -25,8 +23,6 @@ def cli_main(args=None):
     parser = pl.Trainer.add_argparse_args(parser)
 
     args = parser.parse_args(args)
-
-    print(args)
 
     transform = transforms.Compose(
         [
