@@ -20,7 +20,7 @@ jobs:
           export_default_credentials: true
 
       - name: create ci-tpu-instance
-        run: gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-b --scopes=https://www.googleapis.com/auth/cloud-platform
+        run: gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-b
 
       - name: create ci-tpu-node
         run: gcloud compute tpus create ci-tpu-node --zone=us-central1-b --network=default --version=pytorch-1.9 --accelerator-type=v2-8
