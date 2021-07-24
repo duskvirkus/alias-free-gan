@@ -18,9 +18,9 @@ _all_ = [
     "pyhocon",
     "opencv-python-headless",
     "setuptools",
-    "pytorch==1.9",
-    "torchvision==0.10",
-    "cloud-tpu-client==0.10",
+    "pytorch==1.9.0",
+    "torchvision==0.10.0",
+    "cloud-tpu-client==0.10.0",
     "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
 ]
 

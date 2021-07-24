@@ -40,19 +40,19 @@ jobs:
       - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
         run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"$(cat tpu_ip_address.txt)\" && export XRT_TPU_CONFIG=\"$(cat xrt_tpu_config.txt)\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
 
+      - name: stop ci-tpu-instance
+        if: always()
+        run: gcloud compute instances stop ci-tpu-instance --zone us-central1-b
+
       - name: stop ci-tpu-node
         if: always()
         run: gcloud compute tpus stop ci-tpu-node --zone=us-central1-b
 
       - name: delete ci-tpu-instance
         if: always()
-        run: echo "y\n" | gcloud compute tpus stop ci-tpu-node --zone=us-central1-b
-
-      - name: stop ci-tpu-instance
-        if: always()
-        run: gcloud compute instances stop ci-tpu-instance --zone us-central1-b
-
-      - name: delete ci-tpu-instance
-        if: always()
         run: echo "y\n" | gcloud compute instances delete ci-tpu-instance --zone us-central1-b
+
+      - name: delete ci-tpu-node
+        if: always()
+        run: echo "y\n" | gcloud compute tpus stop ci-tpu-node --zone=us-central1-b
       

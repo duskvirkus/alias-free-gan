@@ -19,26 +19,26 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: create ci-test-instance
-        run: gcloud compute instances create ci-test-instance --source-instance-template ci-test-template --zone us-central1-f
+      - name: create ci-gpu-instance
+        run: gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-f
 
-      - name: ci-test-instance | install nvidia drivers
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
+      - name: ci-gpu-instance | install nvidia drivers
+        run: gcloud compute ssh ci-gpu-instance --zone us-central1-f --command "sudo /opt/deeplearning/install-driver.sh"
 
-      - name: ci-test-instance | clone repository
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
+      - name: ci-gpu-instance | clone repository
+        run: gcloud compute ssh ci-gpu-instance --zone us-central1-f --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-gpu-branch && git checkout ci-gpu-branch"
 
-      - name: ci-test-instance | install.py
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python install.py"
+      - name: ci-gpu-instance | install.py
+        run: gcloud compute ssh ci-gpu-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python install.py"
 
-      - name: ci-test-instance | run pytest (cross and gpu tests)
-        run: gcloud compute ssh ci-test-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
+      - name: ci-gpu-instance | run pytest (cross and gpu tests)
+        run: gcloud compute ssh ci-gpu-instance --zone us-central1-f --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
 
-      - name: stop ci-test-instance
+      - name: stop ci-gpu-instance
         if: always()
-        run: gcloud compute instances stop ci-test-instance --zone us-central1-f
+        run: gcloud compute instances stop ci-gpu-instance --zone us-central1-f
 
-      - name: delete ci-test-instance
+      - name: delete ci-gpu-instance
         if: always()
-        run: echo "y\n" | gcloud compute instances delete ci-test-instance --zone us-central1-f
+        run: echo "y\n" | gcloud compute instances delete ci-gpu-instance --zone us-central1-f
       
