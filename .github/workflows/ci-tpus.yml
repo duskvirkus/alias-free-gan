@@ -29,7 +29,7 @@ jobs:
                 gcloud compute tpus delete ci-tpu-node --zone=us-central1-a --quiet \
               ) \
             ) && \
-            gcloud compute tpus list --zone=us-central1-a | awk 'FNR == 2' -Lfatal && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' \
             echo "::set-output name=INSTANCE_ZONE::us-central1-a" \
           ) || ( \
             ( \
@@ -39,7 +39,7 @@ jobs:
                 gcloud compute tpus delete ci-tpu-node --zone=us-central1-b --quiet \
               ) \
             ) && \
-            gcloud compute tpus list --zone=us-central1-b | awk 'FNR == 2' -Lfatal && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' && \
             echo "::set-output name=INSTANCE_ZONE::us-central1-b" \
           ) || ( \
             ( \
@@ -49,7 +49,7 @@ jobs:
                 gcloud compute tpus delete ci-tpu-node --zone=us-central1-c --quiet \
               ) \
             ) && \
-            gcloud compute tpus list --zone=us-central1-c | awk 'FNR == 2' -Lfatal && \
+            gcloud compute tpus list --zone=us-central1-a | awk -Lfatal 'FNR == 2' && \
             echo "::set-output name=INSTANCE_ZONE::us-central1-c" \
           )
         id: create-ci-tpu-instance

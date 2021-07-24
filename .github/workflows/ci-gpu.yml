@@ -39,8 +39,8 @@ jobs:
 
       - name: ci-gpu-instance | clone repository
         run: |
-          gcloud compute ssh ci-gpu-instance -\
-            -zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
+          gcloud compute ssh ci-gpu-instance \
+            --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
             --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-gpu-branch && git checkout ci-gpu-branch"
 
       - name: ci-gpu-instance | install.py
