@@ -5,7 +5,7 @@ $c_command;
 stat=$?;
 
 if [ $stat -eq 0 ];then
-    export USING_ZONE=us-central1-a
+    export INSTANCE_ZONE=us-central1-a
     echo "created on zone us-central1-a"
     exit 0
 else
@@ -17,7 +17,7 @@ $c_command;
 stat=$?;
 
 if [ $stat -eq 0 ];then
-    export USING_ZONE=us-central1-b
+    export INSTANCE_ZONE=us-central1-b
     echo "created on zone us-central1-b"
     exit 0
 else
@@ -29,7 +29,7 @@ $c_command;
 stat=$?;
 
 if [ $stat -eq 0 ];then
-    export USING_ZONE=us-central1-c
+    export INSTANCE_ZONE=us-central1-c
     echo "created on zone us-central1-c"
     exit 0
 else
@@ -41,7 +41,7 @@ $c_command;
 stat=$?;
 
 if [ $stat -eq 0 ];then
-    export USING_ZONE=us-central1-f
+    export INSTANCE_ZONE=us-central1-f
     echo "created on zone us-central1-f"
     exit 0
 else

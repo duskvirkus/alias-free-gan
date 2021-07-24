@@ -28,6 +28,9 @@ jobs:
       - name: save tpu_ip_address.txt and xrt_tpu_config.txt
         run: echo "$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}')" > tpu_ip_address.txt && echo "tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}'):$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 11 {print $2}')" > xrt_tpu_config.txt && cat tpu_ip_address.txt && cat xrt_tpu_config.txt
 
+      - name: ci-tpu-instance | get ssh to work
+        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "echo \"hello\""
+
       - name: send tpu_ip_address.txt and xrt_tpu_config.txt to ci-tpu-instance
         run: gcloud compute scp ./tpu_ip_address.txt ./xrt_tpu_config.txt ci-tpu-instance:~/ --zone=us-central1-b
 

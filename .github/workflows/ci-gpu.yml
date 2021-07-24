@@ -29,22 +29,22 @@ jobs:
         run: ./ci/create_gpu_instance.sh
 
       - name: ci-gpu-instance | install nvidia drivers
-        run: gcloud compute ssh ci-gpu-instance --zone $USING_ZONE --command "sudo /opt/deeplearning/install-driver.sh"
+        run: gcloud compute ssh ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }} --command "sudo /opt/deeplearning/install-driver.sh"
 
       - name: ci-gpu-instance | clone repository
-        run: gcloud compute ssh ci-gpu-instance --zone $USING_ZONE --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-gpu-branch && git checkout ci-gpu-branch"
+        run: gcloud compute ssh ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }} --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-gpu-branch && git checkout ci-gpu-branch"
 
       - name: ci-gpu-instance | install.py
-        run: gcloud compute ssh ci-gpu-instance --zone $USING_ZONE --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
+        run: gcloud compute ssh ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }} --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
 
       - name: ci-gpu-instance | run pytest (cross and gpu tests)
-        run: gcloud compute ssh ci-gpu-instance --zone $USING_ZONE --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
+        run: gcloud compute ssh ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }} --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
 
       - name: stop ci-gpu-instance
         if: always()
-        run: gcloud compute instances stop ci-gpu-instance --zone $USING_ZONE
+        run: gcloud compute instances stop ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }}
 
       - name: delete ci-gpu-instance
         if: always()
-        run: echo "y\n" | gcloud compute instances delete ci-gpu-instance --zone $USING_ZONE
+        run: echo "y\n" | gcloud compute instances delete ci-gpu-instance --zone ${{ env.INSTANCE_ZONE }}
       
