@@ -37,17 +37,8 @@ jobs:
       - name: ci-tpu-instance | install.py
         run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python install.py"
 
-      # - name: ci-tpu-instance | set tpu environment variables
-      #   run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && export TPU_NAME=$(cat tpu_ip.txt) && /bin/bash alias-free-gan-pytorch-lightning/scripts/tpu_setup.sh"
-
-      # - name: ci-tpu-instance | run pytest (cross and tpu tests)
-      #   run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
-
-      # - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
-      #   run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export TPU_NAME=$(cat tpu_name.txt) && cd alias-free-gan-pytorch-lightning && /bin/bash ./scripts/tpu_setup.sh && python -m pytest ./test/cross && python -m pytest ./test/gpu"
-
       - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"$(cat tpu_ip_address.txt)\" && export XRT_TPU_CONFIG=\"$(cat xrt_tpu_config.txt)\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
+        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"$(cat tpu_ip_address.txt)\" && export XRT_TPU_CONFIG=\"$(cat xrt_tpu_config.txt)\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
 
       - name: stop ci-tpu-node
         if: always()
