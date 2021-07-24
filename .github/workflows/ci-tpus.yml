@@ -54,5 +54,5 @@ jobs:
 
       - name: delete ci-tpu-node
         if: always()
-        run: echo "y\n" | gcloud compute tpus stop ci-tpu-node --zone=us-central1-b
+        run: gcloud compute tpus delete ci-tpu-node --zone=us-central1-b --quiet
       
