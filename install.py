@@ -25,9 +25,10 @@ _all_ = [
 ]
 
 def install(packages):
+    all_packages = ''
     for package in packages:
-        os.system(f'python -m pip install {package}')
-
+        all_packages += package + ' '
+    os.system(f'python -m pip install {all_packages}')
 
 def get_cuda_version():
     path = '/usr/local/cuda/version.txt'
