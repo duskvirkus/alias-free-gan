@@ -35,7 +35,7 @@ jobs:
         run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
 
       - name: ci-tpu-instance | install.py
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && cd alias-free-gan-pytorch-lightning && python install.py"
+        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
 
       - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
         run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"$(cat tpu_ip_address.txt)\" && export XRT_TPU_CONFIG=\"$(cat xrt_tpu_config.txt)\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
