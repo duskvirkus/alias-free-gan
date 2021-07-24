@@ -9,7 +9,7 @@ if [ $stat -eq 0 ];then
     # echo "created on zone us-central1-a"
     echo "::set-output name=INSTANCE_ZONE::us-central1-a"
     exit 0
-else
+# else
     # echo "zone us-central1-a failed"
 fi
 
@@ -22,7 +22,7 @@ if [ $stat -eq 0 ];then
     # echo "created on zone us-central1-b"
     echo "::set-output name=INSTANCE_ZONE::us-central1-b"
     exit 0
-else
+# else
     # echo "zone us-central1-b failed"
 fi
 
@@ -35,7 +35,7 @@ if [ $stat -eq 0 ];then
     # echo "created on zone us-central1-c"
     echo "::set-output name=INSTANCE_ZONE::us-central1-c"
     exit 0
-else
+# else
     # echo "zone us-central1-c failed"
 fi
 
@@ -48,7 +48,7 @@ if [ $stat -eq 0 ];then
     # echo "created on zone us-central1-f"
     echo "::set-output name=INSTANCE_ZONE::us-central1-f"
     exit 0
-else
+# else
     # echo "zone us-central1-f failed"
 fi
 
