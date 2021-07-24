@@ -198,6 +198,23 @@ class AliasFreeGAN(pl.LightningModule):
             value_range=(-1, 1),
         )
 
+    def save_checkpoint(self, save_path):
+        optimizers = self.optimizers()
+        print(optimizers)
+        torch.save(
+            {
+                "g": self.generator.state_dict(),
+                "d": self.discriminator.state_dict(),
+                "g_ema": self.g_ema.state_dict(),
+                "g_optim": self.optimizers()[0].state_dict(),
+                "d_optim": self.optimizers()[1].state_dict(),
+                "conf": self.hparams,
+                "ada_aug_p": 0.0,
+            },
+            save_path,
+            # f"checkpoint/{str(i).zfill(6)}.pt",
+        )
+
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = parent_parser.add_argument_group("AliasFreeGAN Model")
