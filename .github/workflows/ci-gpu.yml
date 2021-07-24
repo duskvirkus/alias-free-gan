@@ -12,18 +12,12 @@ jobs:
 
     steps:
 
-      - name: checkout code to run ci scripts
-        uses: actions/checkout@v2
-
       - name: setup google cloud sdk
         uses: google-github-actions/setup-gcloud@master
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-
-      # - name: create ci-gpu-instance
-      #   run: gcloud compute instances create ci-gpu-instance --source-instance-template ci-gpu-template --zone us-central1-f
 
       - name: create ci-gpu-instance
         run: |

@@ -19,43 +19,78 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: create ci-tpu-instance
-        run: gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-b
+      - name: create ci-tpu-instance and ci-tpu-node
+        run: |
+          ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-a --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-a || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-a --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-a | awk 'FNR == 2' -Lfatal && \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-a" \
+          ) || ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-b --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-b || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-b --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-b | awk 'FNR == 2' -Lfatal && \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-b" \
+          ) || ( \
+            ( \
+              gcloud compute tpus create ci-tpu-node --zone=us-central1-c --network=default --version=pytorch-1.9 --accelerator-type=v2-8 && \
+              ( \
+                gcloud compute instances create ci-tpu-instance --source-instance-template ci-tpu-template --zone us-central1-c || \
+                gcloud compute tpus delete ci-tpu-node --zone=us-central1-c --quiet \
+              ) \
+            ) && \
+            gcloud compute tpus list --zone=us-central1-c | awk 'FNR == 2' -Lfatal && \
+            echo "::set-output name=INSTANCE_ZONE::us-central1-c" \
+          )
+        id: create-ci-tpu-instance
 
-      - name: create ci-tpu-node
-        run: gcloud compute tpus create ci-tpu-node --zone=us-central1-b --network=default --version=pytorch-1.9 --accelerator-type=v2-8
-
-      - name: save tpu_ip_address.txt and xrt_tpu_config.txt
-        run: echo "$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}')" > tpu_ip_address.txt && echo "tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}'):$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 11 {print $2}')" > xrt_tpu_config.txt && cat tpu_ip_address.txt && cat xrt_tpu_config.txt
-
-      - name: ci-tpu-instance | get ssh to work
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "echo \"hello\""
-
-      - name: send tpu_ip_address.txt and xrt_tpu_config.txt to ci-tpu-instance
-        run: gcloud compute scp ./tpu_ip_address.txt ./xrt_tpu_config.txt ci-tpu-instance:~/ --zone=us-central1-b
+      - name: get tpu config and set for later use
+        run: |
+          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}')"
+          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 6 {print $2}'):$(gcloud compute tpus describe ci-tpu-node --zone=us-central1-b | awk 'FNR == 11 {print $2}')"
+        id: tpu-config
 
       - name: ci-tpu-instance | clone repository
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "git clone https://github.com/duskvirkus/alias-free-gan-pytorch-lightning.git && cd alias-free-gan-pytorch-lightning && git fetch origin ${{ github.event.pull_request.head.sha }}:ci-test-branch && git checkout ci-test-branch"
 
       - name: ci-tpu-instance | install.py
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan-pytorch-lightning && python install.py"
 
       - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
-        run: gcloud compute ssh ci-tpu-instance --zone us-central1-b --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"$(cat tpu_ip_address.txt)\" && export XRT_TPU_CONFIG=\"$(cat xrt_tpu_config.txt)\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
+        run: |
+          gcloud compute ssh ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=${{ steps.tpu-config.outputs.TPU_IP_ADDRESS }} && export XRT_TPU_CONFIG=${{ steps.tpu-config.outputs.XRT_TPU_CONFIG }} && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
 
-      - name: stop ci-tpu-instance
+      - name: cleanup ci-tpu-instance
         if: always()
-        run: gcloud compute instances stop ci-tpu-instance --zone us-central1-b
+        run: |
+          gcloud compute instances stop ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
+          echo "y\n" | gcloud compute instances delete ci-tpu-instance \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
 
-      - name: stop ci-tpu-node
+      - name: cleanup ci-tpu-node
         if: always()
-        run: gcloud compute tpus stop ci-tpu-node --zone=us-central1-b
-
-      - name: delete ci-tpu-instance
-        if: always()
-        run: echo "y\n" | gcloud compute instances delete ci-tpu-instance --zone us-central1-b
-
-      - name: delete ci-tpu-node
-        if: always()
-        run: gcloud compute tpus delete ci-tpu-node --zone=us-central1-b --quiet
-      
+        run: |
+          gcloud compute tpus stop ci-tpu-node \
+            --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }}
+          gcloud compute tpus delete ci-tpu-node \
+            --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
+            --quiet
