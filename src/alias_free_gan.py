@@ -28,6 +28,8 @@ class AliasFreeGAN(pl.LightningModule):
 
         self.save_hyperparameters()
 
+        self.kwargs = kwargs # for making deep copies
+
         self.batch = kwargs['batch']
         self.augment = kwargs['augment']
         self.n_samples = kwargs['n_samples']
@@ -154,11 +156,6 @@ class AliasFreeGAN(pl.LightningModule):
 
         return loss
 
-    @staticmethod
-    def _requires_grad(model, flag=True):
-        for p in model.parameters():
-            p.requires_grad = flag
-
     def _accumulate(self, model1, model2, decay=0.999):
         par1 = dict(model1.named_parameters())
         par2 = dict(model2.named_parameters())
@@ -214,6 +211,23 @@ class AliasFreeGAN(pl.LightningModule):
             save_path,
             # f"checkpoint/{str(i).zfill(6)}.pt",
         )
+
+    def load_checkpoint(self, load_path):
+        checkpoint = torch.load(load_path, map_location=lambda storage, loc: storage)
+
+        self.generator.load_state_dict(checkpoint["g"])
+        self.discriminator.load_state_dict(checkpoint["d"])
+        self.g_ema.load_state_dict(checkpoint["g_ema"])
+
+        self.optimizers()[0].load_state_dict(checkpoint["g_optim"])
+        self.optimizers()[1].load_state_dict(checkpoint["d_optim"])
+
+        # TODO add support for loading hparams
+
+    @staticmethod
+    def _requires_grad(model, flag=True):
+        for p in model.parameters():
+            p.requires_grad = flag
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:

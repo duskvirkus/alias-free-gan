@@ -9,22 +9,25 @@ _all_ = [
     "wandb",
     "ninja",
     "pytest",
+    "pydantic",
+    "pyhocon",
+    "opencv-python-headless",
+]
+
+non_ci = [
+    "cloud-tpu-client==0.10.0",
+    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
+]
+
+non_colab = [
     "numpy",
     "scipy",
     "nltk",
     "lmdb",
     "cython",
-    "pydantic",
-    "pyhocon",
-    "opencv-python-headless",
     "setuptools",
-]
-
-non_ci = [
-    "pytorch==1.9",
-    "torchvision==0.10",
-    "cloud-tpu-client==0.10",
-    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
+    "pytorch>1.9.0",
+    "torchvision>0.10.0",
 ]
 
 def install(packages):
@@ -73,6 +76,9 @@ if __name__ == '__main__':
 
     if 'CI_RUNNING' not in os.environ:
         install(non_ci)
+
+    if not ('COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ):
+        install(non_colab)
 
     # cuda_version = get_cuda_version()
     # install_arrayfire_wheel(cuda_version)
