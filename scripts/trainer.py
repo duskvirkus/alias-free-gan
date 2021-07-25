@@ -24,6 +24,8 @@ def cli_main(args=None):
 
     args = parser.parse_args(args)
 
+    print(args)
+
     transform = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(),

@@ -26,8 +26,16 @@ non_colab = [
     "lmdb",
     "cython",
     "setuptools",
+]
+
+non_ci_and_colab = [
     "pytorch>1.9.0",
     "torchvision>0.10.0",
+]
+
+colab_tpu = [
+    "cloud-tpu-client==0.10.0",
+    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
 ]
 
 def install(packages):
@@ -79,6 +87,13 @@ if __name__ == '__main__':
 
     if not ('COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ):
         install(non_colab)
+
+    if not ('COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ or 'CI_RUNNING' in os.environ):
+        install(non_ci_and_colab)
+
+    if 'COLAB_TPU_ADDR' in os.environ:
+        install(colab_tpu)
+
 
     # cuda_version = get_cuda_version()
     # install_arrayfire_wheel(cuda_version)
