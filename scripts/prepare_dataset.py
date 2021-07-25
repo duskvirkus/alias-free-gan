@@ -21,7 +21,7 @@ def resize_and_convert(img, size, resample, quality=100):
 
 
 def resize_multiple(
-    img, sizes=(128, 256, 512, 1024), resample=Image.LANCZOS, quality=100
+    img, sizes=(256, 512, 1024), resample=Image.LANCZOS, quality=100
 ):
     imgs = []
 
@@ -41,7 +41,7 @@ def resize_worker(img_file, sizes, resample):
 
 
 def prepare(
-    env, dataset, n_worker, sizes=(128, 256, 512, 1024), resample=Image.LANCZOS
+    env, dataset, n_worker, sizes=(256, 512, 1024), resample=Image.LANCZOS
 ):
     resize_fn = partial(resize_worker, sizes=sizes, resample=resample)
 
@@ -65,26 +65,26 @@ def prepare(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess images for model training")
-    parser.add_argument("--out", type=str, help="filename of the result lmdb dataset")
     parser.add_argument(
         "--size",
         type=str,
-        default="128,256,512,1024",
-        help="resolutions of images for the dataset",
+        default="256,512,1024",
+        help="Resolutions of images for the dataset. (default: %(default)s)",
     )
     parser.add_argument(
         "--n_worker",
         type=int,
-        default=8,
-        help="number of workers for preparing dataset",
+        default=2,
+        help="Number of workers for preparing dataset. (default: %(default)s)",
     )
     parser.add_argument(
         "--resample",
         type=str,
         default="lanczos",
-        help="resampling methods for resizing images",
+        help="Resampling methods for resizing images. 'lanczos' or 'bilinear' (default: %(default)s)",
     )
-    parser.add_argument("path", type=str, help="path to the image dataset")
+    parser.add_argument("path", type=str, help="Path to the image dataset.")
+    parser.add_argument("out", type=str, help="Filename of the result lmdb dataset.")
 
     args = parser.parse_args()
 
