@@ -14,11 +14,6 @@ _all_ = [
     "opencv-python-headless",
 ]
 
-non_ci = [
-    "cloud-tpu-client==0.10.0",
-    "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
-]
-
 non_colab = [
     "numpy",
     "scipy",
@@ -82,16 +77,13 @@ if __name__ == '__main__':
 
     install(_all_)
 
-    if 'CI_RUNNING' not in os.environ:
-        install(non_ci)
-
     if not ('COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ):
         install(non_colab)
 
     if not ('COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ or 'CI_RUNNING' in os.environ):
         install(non_ci_and_colab)
 
-    if 'COLAB_TPU_ADDR' in os.environ:
+    if 'COLAB_TPU_ADDR' in os.environ and 'CI_RUNNING' not in os.environ:
         install(colab_tpu)
 
 

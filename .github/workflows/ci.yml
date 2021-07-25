@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-   branches: [ main ]
+   branches: [ main, devel, stable ]
   pull_request:
-   branches: [ main ]
+   branches: [ main, devel, stable ]
 
 jobs:
   gpu-pytest-on-gcloud:

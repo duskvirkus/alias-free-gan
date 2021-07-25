@@ -22,15 +22,23 @@ class AliasFreeGAN(pl.LightningModule):
 
     def __init__(
         self,
+        resume_path = None
         **kwargs: Any,
     ):
         super().__init__()
 
         self.save_hyperparameters()
 
+        self.resume_path = resume_path
+
         self.kwargs = kwargs # for making deep copies
 
-        self.batch = kwargs['batch']
+        self.batch_size is not None:
+            self.batch = self.batch_size
+        else:
+            self.batch = kwargs['batch']
+
+
         self.augment = kwargs['augment']
         self.n_samples = kwargs['n_samples']
         self.size = kwargs['size']
@@ -234,7 +242,8 @@ class AliasFreeGAN(pl.LightningModule):
         parser = parent_parser.add_argument_group("AliasFreeGAN Model")
         parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
         parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int) # TODO add support for --auto_scale_batch_size
-        parser.add_argument("--n_samples", help='Number of samples to generate in training process. (default: %(default)s)', default=9, type=int)
+        parser.add_argument("--n_samples", help='Number of samples to generate in training process. Be sure to put --n_samples_off_batch False to use otherwise samples will be the same as batch. (default: %(default)s)', default=8, type=int)
+        parser.add_argument("--n_samples_off_batch", help='Generate the same number of samples as the batch size. (default: %(default)s)', default=True, type=bool)
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)

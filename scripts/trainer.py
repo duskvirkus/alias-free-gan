@@ -18,6 +18,7 @@ def cli_main(args=None):
 
     script_parser = parser.add_argument_group("Trainer Script")
     script_parser.add_argument("--dataset_path", help='Path to dataset. Required!', type=str, required=True)
+    script_parser.add_argument("--resume_from", help='Resume from checkpoint or transfer learn off pretrained model. Leave blank to train from scratch.', type=str, default=None)
 
     parser = AliasFreeGAN.add_model_specific_args(parser)
     parser = pl.Trainer.add_argparse_args(parser)
