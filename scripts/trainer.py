@@ -8,6 +8,8 @@ from torchvision import transforms
 import pytorch_lightning as pl
 # from pl_bolts.callbacks import TensorboardGenerativeModelImageSampler
 
+import gdown
+
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
@@ -25,7 +27,18 @@ def cli_main(args=None):
 
     args = parser.parse_args(args)
 
-    print(args)
+    project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    pretrained_models = [
+        ['rosinality-ffhq-280000', 'https://drive.google.com/file/d/1X6loWvqHq2D6m-31LyjqvigooR24qB8Y/view?usp=sharing'],
+    ]
+
+    resume_path = None
+    for pretrained in pretrained_models:
+        if args.resume_from == pretrained[0]:
+            save_path = os.path.join(project_root, 'pretrained', pretrained[0] + '.pt')
+            if not os.path.isfile(save_path):
+                gdown.download(pretrained[1], save_path, quiet=False)
+            resume_path = save_path
 
     transform = transforms.Compose(
         [
@@ -50,7 +63,7 @@ def cli_main(args=None):
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
 
-    model = AliasFreeGAN(**vars(args))
+    model = AliasFreeGAN(resume_path, **vars(args))
     trainer.fit(model, train_loader)
 
 if __name__ == "__main__":

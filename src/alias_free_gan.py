@@ -22,7 +22,7 @@ class AliasFreeGAN(pl.LightningModule):
 
     def __init__(
         self,
-        resume_path = None
+        resume_path = None,
         **kwargs: Any,
     ):
         super().__init__()
@@ -33,11 +33,7 @@ class AliasFreeGAN(pl.LightningModule):
 
         self.kwargs = kwargs # for making deep copies
 
-        self.batch_size is not None:
-            self.batch = self.batch_size
-        else:
-            self.batch = kwargs['batch']
-
+        self.batch = kwargs['batch']
 
         self.augment = kwargs['augment']
         self.n_samples = kwargs['n_samples']
