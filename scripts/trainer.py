@@ -13,6 +13,8 @@ import gdown
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
+from src.utils import sha1_hash
+from src.pretrained_models import pretrained_models
 
 def cli_main(args=None):
 
@@ -28,17 +30,29 @@ def cli_main(args=None):
     args = parser.parse_args(args)
 
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-    pretrained_models = [
-        ['rosinality-ffhq-280000', 'https://drive.google.com/file/d/1X6loWvqHq2D6m-31LyjqvigooR24qB8Y/view?usp=sharing'],
-    ]
 
     resume_path = None
     for pretrained in pretrained_models:
-        if args.resume_from == pretrained[0]:
-            save_path = os.path.join(project_root, 'pretrained', pretrained[0] + '.pt')
-            if not os.path.isfile(save_path):
-                gdown.download(pretrained[1], save_path, quiet=False)
-            resume_path = save_path
+        if args.resume_from == pretrained['model_name']:
+
+            if args.size == pretrained['model_size']:
+                save_path = os.path.join(project_root, 'pretrained', pretrained['model_name'] + '.pt')
+                if not os.path.isfile(save_path):
+                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['download_url']))
+                    gdown.download(pretrained['download_url'], save_path, quiet=False)
+
+                # verify hash
+                sha1_hash_val = sha1_hash(save_path)
+                if (sha1_hash_val != pretrained['sha1']):
+                    print('Unexpected sha1 hash for %s! Expected %s but got %s. If you see this error try deleting %s and rerunning to download the pretrained model it indicates a corrupted file.' % (save_path, pretrained['sha1'], sha1_hash_val, save_path))
+                
+                resume_path = save_path
+            else:
+                print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
+                exit(1)
+
+    if args.resume_from is not None:
+        resume_path = save_path
 
     transform = transforms.Compose(
         [

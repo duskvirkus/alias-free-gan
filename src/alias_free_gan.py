@@ -22,7 +22,7 @@ class AliasFreeGAN(pl.LightningModule):
 
     def __init__(
         self,
-        resume_path = None,
+        resume_path,
         **kwargs: Any,
     ):
         super().__init__()
@@ -36,7 +36,10 @@ class AliasFreeGAN(pl.LightningModule):
         self.batch = kwargs['batch']
 
         self.augment = kwargs['augment']
-        self.n_samples = kwargs['n_samples']
+        if kwargs['n_samples_from_batch']:
+            self.n_samples = self.batch
+        else:
+            self.n_samples = kwargs['n_samples']
         self.size = kwargs['size']
 
         self.lr_g = kwargs['lr_g']
@@ -62,6 +65,8 @@ class AliasFreeGAN(pl.LightningModule):
             ),
         }
 
+        print(generator_args)
+
         self.generator = Generator(
             **generator_args,
             **kwargs
@@ -83,7 +88,13 @@ class AliasFreeGAN(pl.LightningModule):
         )
 
     def on_train_start(self):
-        print(f'\nAlignFreeGAN device: %s\n' % self.device)
+        print('\n')
+        if self.resume_path is not None:
+            print(f'Resuming from: %s\n' % self.resume_path)
+            self.load_checkpoint(self.resume_path)
+        print(f'AlignFreeGAN device: %s' % self.device)
+        print('\n')
+
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         real = batch
@@ -217,7 +228,10 @@ class AliasFreeGAN(pl.LightningModule):
         )
 
     def load_checkpoint(self, load_path):
-        checkpoint = torch.load(load_path, map_location=lambda storage, loc: storage)
+        # checkpoint = torch.load(load_path, map_location=torch.device(self.device))
+        checkpoint = torch.load(load_path)
+
+        print(checkpoint['conf'])
 
         self.generator.load_state_dict(checkpoint["g"])
         self.discriminator.load_state_dict(checkpoint["d"])
@@ -239,7 +253,7 @@ class AliasFreeGAN(pl.LightningModule):
         parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
         parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int) # TODO add support for --auto_scale_batch_size
         parser.add_argument("--n_samples", help='Number of samples to generate in training process. Be sure to put --n_samples_off_batch False to use otherwise samples will be the same as batch. (default: %(default)s)', default=8, type=int)
-        parser.add_argument("--n_samples_off_batch", help='Generate the same number of samples as the batch size. (default: %(default)s)', default=True, type=bool)
+        parser.add_argument("--n_samples_from_batch", help='Generate the same number of samples as the batch size. (default: %(default)s)', default=True, type=bool)
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)

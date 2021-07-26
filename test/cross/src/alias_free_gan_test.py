@@ -45,13 +45,11 @@ def tensors_equal(tensor1, tensor2):
 
 def assert_ordered_dict_equal(dict1, dict2):
     for i, j in zip(dict1.items(), dict2.items()):
-        print(type(i), type(j))
         if isinstance(i, tuple) and isinstance(j, tuple):
             i = list(i)
             j = list(j)
 
             for k, m in zip(i, j):
-                print(type(k), type(m))
                 if isinstance(k, torch.Tensor) and isinstance(m, torch.Tensor):
                     assert(tensors_equal(k, m))
                 elif isinstance(k, torch.Tensor) or isinstance(m, torch.Tensor):
@@ -123,8 +121,6 @@ def test_save_checkpoint_and_load_checkpoint():
     assert os.path.isfile('./ci/temp/test-checkpoint.pt')
 
     model.load_checkpoint('./ci/temp/test-checkpoint.pt')
-
-    print(type(generator_copy))
 
     assert_ordered_dict_equal(model.generator.state_dict(), generator_copy)
     assert_ordered_dict_equal(model.discriminator.state_dict(), discriminator_copy)
