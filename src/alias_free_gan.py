@@ -55,11 +55,11 @@ class AliasFreeGAN(pl.LightningModule):
             'filter_parameters':filter_parameters(
                 n_layer=14,
                 n_critical=2,
-                sr_max=self.size,
+                sr_max=self.size / 2,
                 cutoff_0=2,
-                cutoff_n=self.size / 2,
+                cutoff_n=self.size / 4,
                 stopband_0=pow(2, 2.1),
-                stopband_n=(self.size / 2) * pow(2, 0.3),
+                stopband_n=(self.size / 4) * pow(2, 0.3),
                 channel_max=512,
                 channel_base=pow(2, 14)
             ),
