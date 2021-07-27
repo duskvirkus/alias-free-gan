@@ -75,7 +75,7 @@ You can do so by creating a pull request to the `stable` branch. Add information
             "model_size": 512,
             "gdown": "Please include a link to download your model in you're pull request and I will update this", 
             "sha1": "If you know how to make a sha1 hash then you can fill this out if not leave this blank.",
-            "licence_and_compensation_information": "Please put any licencing and compensation information here you would like to include. An example could be: 'This model is under a CC-BY-NC-SA Licence. Please sending $5 for transfer learning off of it on paypal using name@example.com. Contact me at name@example.com if you would like to use it in a commercial project.'"
+            "licence_and_compensation_information": "Please put any licencing and compensation information here you would like to include. An example could be: 'This model is under a CC-BY-NC-SA Licence. Please send $5 for transfer learning off of it on paypal to name@example.com. Contact me at name@example.com if you would like to use it in a commercial project.'"
         }
 ```
 
