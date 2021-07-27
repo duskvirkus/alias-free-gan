@@ -3,11 +3,12 @@
         {
             "model_name": "rosinality-ffhq-280000",
             "creator": "rosinality",
-            "type": "aliasfree-rosinality",
+            "model_architecture": "alias-free-rosinality-v0",
             "description": "Incomplete ffhq model at 280000 steps by rosinality (source: https://github.com/rosinality/alias-free-gan-pytorch/issues/3)",
             "model_size": 512,
             "gdown": "https://drive.google.com/uc?id=1X6loWvqHq2D6m-31LyjqvigooR24qB8Y", 
-            "sha1": "e3b795ad411ecd5583e957a50253ce94a5d39ba4"
+            "sha1": "e3b795ad411ecd5583e957a50253ce94a5d39ba4",
+            "licence_and_compensation_information": ""
         }
     ]
 }
