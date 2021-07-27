@@ -18,16 +18,28 @@ if 'USE_CPU_OP' in os.environ:
 else:
     from src.stylegan2.op import conv2d_gradfix
 
+SUPPORTED_ARCHITECTURE = [
+    'alias-free-rosinality-v0',
+    'alias-free-v1_0_0',
+]
+
 class AliasFreeGAN(pl.LightningModule):
 
     def __init__(
         self,
+        model_architecture,
         resume_path,
         **kwargs: Any,
     ):
         super().__init__()
 
         self.save_hyperparameters()
+
+        if model_architecture not in SUPPORTED_ARCHITECTURE:
+            print('%s is not a supported model architecture for this version of Alias-Free-GAN! Please check the Alias-Free-GAN version number you are using and refer to documentation to insure you\'re model version is compatable.' % model_architecture)
+            exit(2)
+
+        self.model_architecture = model_architecture
 
         self.resume_path = resume_path
 
@@ -46,24 +58,45 @@ class AliasFreeGAN(pl.LightningModule):
         self.lr_d = kwargs['lr_d']
         self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
 
-
-        generator_args = {
-            'style_dim':self.size,
-            'n_mlp':2,
-            'kernel_size':3,
-            'n_taps':6,
-            'filter_parameters':filter_parameters(
-                n_layer=14,
-                n_critical=2,
-                sr_max=self.size / 2,
-                cutoff_0=2,
-                cutoff_n=self.size / 4,
-                stopband_0=pow(2, 2.1),
-                stopband_n=(self.size / 4) * pow(2, 0.3),
-                channel_max=512,
-                channel_base=pow(2, 14)
-            ),
-        }
+        generator_args = None
+        if self.model_architecture == 'alias-free-rosinality-v0':
+            generator_args = {
+                'model_architecture': self.model_architecture
+                'style_dim':self.size,
+                'n_mlp':2,
+                'kernel_size':3,
+                'n_taps':6,
+                'filter_parameters':filter_parameters(
+                    n_layer=14,
+                    n_critical=2,
+                    sr_max=self.size / 2,
+                    cutoff_0=2,
+                    cutoff_n=self.size / 4,
+                    stopband_0=pow(2, 2.1),
+                    stopband_n=(self.size / 4) * pow(2, 0.3),
+                    channel_max=512,
+                    channel_base=pow(2, 14)
+                ),
+            }
+        elif self.model_architecture == 'alias-free-v1_0_0':
+            generator_args = {
+                'model_architecture': self.model_architecture
+                'style_dim':self.size,
+                'n_mlp':2,
+                'kernel_size':3,
+                'n_taps':6,
+                'filter_parameters':filter_parameters(
+                    n_layer=14,
+                    n_critical=2,
+                    sr_max=self.size,
+                    cutoff_0=2,
+                    cutoff_n=self.size / 2,
+                    stopband_0=pow(2, 2.1),
+                    stopband_n=(self.size / 2) * pow(2, 0.3),
+                    channel_max=512,
+                    channel_base=pow(2, 14)
+                ),
+            }
 
         print(generator_args)
 

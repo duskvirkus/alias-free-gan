@@ -93,11 +93,17 @@ def filter_parameters(
 
 
 class FourierFeature(pl.LightningModule):
-    def __init__(self, size, dim, cutoff, eps=1e-8):
+    def __init__(self, model_architecture, size, dim, cutoff, eps=1e-8):
         super().__init__()
 
+        self.model_architecture = model_architecture
+
         coords = torch.linspace(-1, 1, size + 1)[:-1]
-        freqs = torch.linspace(0, cutoff, dim // 4)
+
+        if self.model_architecture == 'alias-free-rosinality-v0':
+            freqs = torch.linspace(0, size / 2,, dim // 4)
+        else:
+            freqs = torch.linspace(0, cutoff, dim // 4)
 
         self.register_buffer("coords", coords)
         self.register_buffer("freqs", freqs)
@@ -336,6 +342,7 @@ class ToRGB(nn.Module):
 class Generator(nn.Module):
     def __init__(
         self,
+        model_architecture,
         style_dim,
         n_mlp,
         kernel_size,
@@ -347,6 +354,7 @@ class Generator(nn.Module):
     ):
         super().__init__()
 
+        self.model_architecture = model_architecture
         self.style_dim = style_dim
         self.margin = margin
 
@@ -367,14 +375,20 @@ class Generator(nn.Module):
         band_halfs = filter_parameters["band_halfs"]
         channels = filter_parameters["channels"]
 
-        self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
+        if self.model_architecture == 'alias-free-rosinality-v0':
+            self.input = FourierFeature(self.model_architecture, srs[0] + margin * 2, channels[0])
+        else:
+            self.input = FourierFeature(self.model_architecture, srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
+        
         self.affine_fourier = EqualLinear(style_dim, 4)
         with torch.no_grad():
             self.affine_fourier.weight.zero_()
             self.affine_fourier.bias.copy_(
                 torch.tensor([1, 0, 0, 0], dtype=torch.float32)
             )
-        self.conv1 = EqualConv2d(channels[0], channels[0], 1)
+
+        if self.model_architecture != 'alias-free-rosinality-v0':
+            self.conv1 = EqualConv2d(channels[0], channels[0], 1)
 
         self.convs = nn.ModuleList()
         for i in range(len(srs)):
@@ -388,9 +402,17 @@ class Generator(nn.Module):
             up_filter = lowpass_filter(
                 n_taps * up * 2, cutoffs[prev], band_halfs[prev], srs[i] * up * 2
             )
-            down_filter = lowpass_filter(
-                n_taps * up, cutoffs[i], band_halfs[i], srs[i] * up * 2
-            )
+
+            down_filter = None
+            if self.model_architecture == 'alias-free-rosinality-v0':
+                down_filter = lowpass_filter(
+                    n_taps * up * 2, cutoffs[i], band_halfs[i], srs[i] * up * 2
+                )
+            else:
+                down_filter = lowpass_filter(
+                    n_taps * up, cutoffs[i], band_halfs[i], srs[i] * up * 2
+                )
+
 
             self.convs.append(
                 AliasFreeConv(

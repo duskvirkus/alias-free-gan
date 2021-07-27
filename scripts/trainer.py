@@ -11,12 +11,15 @@ import pytorch_lightning as pl
 import gdown
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from src import __version__
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
 from src.utils import sha1_hash
 from src.pretrained_models import pretrained_models
 
 def cli_main(args=None):
+
+    print('Using Alias-Free GAN version: %s' __version__)
 
     parser = ArgumentParser()
 
