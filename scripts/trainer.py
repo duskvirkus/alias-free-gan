@@ -94,7 +94,6 @@ def cli_main(args=None):
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
 
-    print(model_architecture, resume_path, args)
     model = AliasFreeGAN(model_architecture, resume_path, **vars(args))
     trainer.fit(model, train_loader)
 

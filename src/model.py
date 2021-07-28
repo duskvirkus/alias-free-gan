@@ -366,7 +366,7 @@ class Generator(nn.Module):
         for i in range(n_mlp):
             layers.append(
                 EqualLinear(
-                    style_dim * 2, style_dim * 2, lr_mul=lr_mlp, activation="fused_lrelu"
+                    style_dim, style_dim, lr_mul=lr_mlp, activation="fused_lrelu"
                 )
             )
 

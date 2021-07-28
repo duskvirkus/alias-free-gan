@@ -19,7 +19,7 @@ else:
     from src.stylegan2.op import conv2d_gradfix
 
 SUPPORTED_ARCHITECTURE = [
-    'alias-free-rosinality-v0',
+
     'alias-free-rosinality-v1',
 ]
 
@@ -81,7 +81,7 @@ class AliasFreeGAN(pl.LightningModule):
         elif self.model_architecture == 'alias-free-rosinality-v1':
             generator_args = {
                 'model_architecture': self.model_architecture,
-                'style_dim':self.size,
+                'style_dim':512,
                 'n_mlp':2,
                 'kernel_size':3,
                 'n_taps':6,
@@ -97,8 +97,6 @@ class AliasFreeGAN(pl.LightningModule):
                     channel_base=pow(2, 14)
                 ),
             }
-
-        print(generator_args)
 
         self.generator = Generator(
             **generator_args,
@@ -117,7 +115,7 @@ class AliasFreeGAN(pl.LightningModule):
 
         
         self.sample_z = torch.randn(
-            self.n_samples, self.size
+            self.n_samples, self.generator.style_dim
         )
 
     def on_train_start(self):
@@ -263,8 +261,6 @@ class AliasFreeGAN(pl.LightningModule):
     def load_checkpoint(self, load_path):
         # checkpoint = torch.load(load_path, map_location=torch.device(self.device))
         checkpoint = torch.load(load_path)
-
-        print(checkpoint['conf'])
 
         self.generator.load_state_dict(checkpoint["g"])
         self.discriminator.load_state_dict(checkpoint["d"])
