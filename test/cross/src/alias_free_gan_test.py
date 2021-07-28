@@ -99,7 +99,7 @@ def test_save_checkpoint_and_load_checkpoint():
     dataset = MultiResolutionDataset('./ci/flowers-test-dataset-32-256', transform=transform, resolution=args.size)
     train_loader = data.DataLoader(dataset, batch_size=1, num_workers=1, drop_last=True)
 
-    model = AliasFreeGAN('alias-free-rosinality-v1', '/dev/null', **vars(args))
+    model = AliasFreeGAN('alias-free-rosinality-v1', '', '/dev/null', **vars(args))
     trainer = None
     if 'TPU_IP_ADDRESS' in os.environ:
         trainer = pl.Trainer(max_epochs=0, tpu_cores=8)

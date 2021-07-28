@@ -97,7 +97,7 @@ class AliasFreeGAN(pl.LightningModule):
 
     def on_train_start(self):
         print('\n')
-        if self.resume_path is not None:
+        if self.resume_path is not None or self.resume_path == '':
             print(f'Resuming from: %s\n' % self.resume_path)
             self.load_checkpoint(self.resume_path)
         print(f'AlignFreeGAN device: %s' % self.device)
