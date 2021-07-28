@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import sys
 import os
 import json
+import re
 
 from torch.utils import data
 from torchvision import transforms
@@ -24,10 +25,30 @@ def load_pretrained_models():
 
         return data['pretrained_models']
 
+def create_results_dir():
+    results_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../results')
+    os.makedirs(results_root, exist_ok=True)
+
+
+    max_num = -1
+
+    for root, subdirs, files in os.walk(results_root):
+        for subdir in subdirs:
+            numbers = re.findall('[0-9]+', subdir)
+            if (int(numbers[0]) > max_num):
+                max_num = int(numbers[0])
+    
+    max_num += 1
+
+    results_dir = os.path.join(results_root, 'training-' + str(max_num).zfill(6))
+    os.makedirs(results_dir)
+    return results_dir
 
 def cli_main(args=None):
 
     print('Using Alias-Free GAN version: %s' % __version__)
+
+    results_dir = create_results_dir()
 
     pretrained_models = load_pretrained_models()
 
@@ -63,7 +84,7 @@ def cli_main(args=None):
                 resume_path = save_path
                 model_architecture = pretrained['model_architecture']
 
-                print('Licence and compensation information for %s pretrained model: %s' % (pretrained['model_name'], pretrained['licence_and_compensation_information']))
+                print('\n\nLicence and compensation information for %s pretrained model: %s\n\n' % (pretrained['model_name'], pretrained['licence_and_compensation_information']))
             else:
                 print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
                 exit(1)
@@ -94,7 +115,7 @@ def cli_main(args=None):
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
 
-    model = AliasFreeGAN(model_architecture, resume_path, **vars(args))
+    model = AliasFreeGAN(model_architecture, resume_path, results_dir, **vars(args))
     trainer.fit(model, train_loader)
 
 if __name__ == "__main__":

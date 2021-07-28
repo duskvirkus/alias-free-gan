@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from typing import Any
+import sys
 import os
 
 import torch
@@ -19,7 +20,6 @@ else:
     from src.stylegan2.op import conv2d_gradfix
 
 SUPPORTED_ARCHITECTURE = [
-
     'alias-free-rosinality-v1',
 ]
 
@@ -29,6 +29,7 @@ class AliasFreeGAN(pl.LightningModule):
         self,
         model_architecture,
         resume_path,
+        results_dir,
         **kwargs: Any,
     ):
         super().__init__()
@@ -40,6 +41,7 @@ class AliasFreeGAN(pl.LightningModule):
             exit(2)
 
         self.model_architecture = model_architecture
+        self.results_dir = results_dir
 
         self.resume_path = resume_path
 
@@ -48,55 +50,30 @@ class AliasFreeGAN(pl.LightningModule):
         self.batch = kwargs['batch']
 
         self.augment = kwargs['augment']
-        if kwargs['n_samples_from_batch']:
-            self.n_samples = self.batch
-        else:
-            self.n_samples = kwargs['n_samples']
+        self.n_samples = kwargs['n_samples']
         self.size = kwargs['size']
 
         self.lr_g = kwargs['lr_g']
         self.lr_d = kwargs['lr_d']
         self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
 
-        generator_args = None
-        if self.model_architecture == 'alias-free-rosinality-v0':
-            generator_args = {
-                'model_architecture': self.model_architecture,
-                'style_dim':self.size,
-                'n_mlp':2,
-                'kernel_size':3,
-                'n_taps':6,
-                'filter_parameters':filter_parameters(
-                    n_layer=14,
-                    n_critical=2,
-                    sr_max=self.size / 2,
-                    cutoff_0=2,
-                    cutoff_n=self.size / 4,
-                    stopband_0=pow(2, 2.1),
-                    stopband_n=(self.size / 4) * pow(2, 0.3),
-                    channel_max=512,
-                    channel_base=pow(2, 14)
-                ),
-            }
-        elif self.model_architecture == 'alias-free-rosinality-v1':
-            generator_args = {
-                'model_architecture': self.model_architecture,
-                'style_dim':512,
-                'n_mlp':2,
-                'kernel_size':3,
-                'n_taps':6,
-                'filter_parameters':filter_parameters(
-                    n_layer=14,
-                    n_critical=2,
-                    sr_max=self.size,
-                    cutoff_0=2,
-                    cutoff_n=self.size / 2,
-                    stopband_0=pow(2, 2.1),
-                    stopband_n=(self.size / 2) * pow(2, 0.3),
-                    channel_max=512,
-                    channel_base=pow(2, 14)
-                ),
-            }
+        generator_args = {
+            'style_dim':512,
+            'n_mlp':2,
+            'kernel_size':3,
+            'n_taps':6,
+            'filter_parameters':filter_parameters(
+                n_layer=14,
+                n_critical=2,
+                sr_max=self.size,
+                cutoff_0=2,
+                cutoff_n=self.size / 2,
+                stopband_0=pow(2, 2.1),
+                stopband_n=(self.size / 2) * pow(2, 0.3),
+                channel_max=512,
+                channel_base=pow(2, 14)
+            ),
+        }
 
         self.generator = Generator(
             **generator_args,
@@ -125,6 +102,16 @@ class AliasFreeGAN(pl.LightningModule):
             self.load_checkpoint(self.resume_path)
         print(f'AlignFreeGAN device: %s' % self.device)
         print('\n')
+
+        print('Saving z-samples out ...')
+        torch.save(
+            {
+                "sample_z": self.sample_z,
+            },
+            os.path.join(self.results_dir, 'sample_z.pt')
+            # f"checkpoint/{str(i).zfill(6)}.pt",
+        )
+
 
 
     def training_step(self, batch, batch_idx, optimizer_idx):
@@ -235,15 +222,15 @@ class AliasFreeGAN(pl.LightningModule):
         sample = self.g_ema(self.sample_z)
         utils.save_image(
             sample,
-            f"sample/{str(self.current_epoch).zfill(6)}.png",
+            os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-samples.png'),
             nrow=int(self.n_samples ** 0.5),
             normalize=True,
             value_range=(-1, 1),
         )
+        self.save_checkpoint(os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-checkpoint.pt'))
 
     def save_checkpoint(self, save_path):
         optimizers = self.optimizers()
-        print(optimizers)
         torch.save(
             {
                 "g": self.generator.state_dict(),
@@ -282,7 +269,6 @@ class AliasFreeGAN(pl.LightningModule):
         parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
         parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int) # TODO add support for --auto_scale_batch_size
         parser.add_argument("--n_samples", help='Number of samples to generate in training process. Be sure to put --n_samples_off_batch False to use otherwise samples will be the same as batch. (default: %(default)s)', default=8, type=int)
-        parser.add_argument("--n_samples_from_batch", help='Generate the same number of samples as the batch size. (default: %(default)s)', default=True, type=bool)
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)
