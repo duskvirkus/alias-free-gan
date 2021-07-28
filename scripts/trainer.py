@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import sys
 import os
+import json
 
 from torch.utils import data
 from torchvision import transforms
@@ -17,9 +18,18 @@ from src.stylegan2.dataset import MultiResolutionDataset
 from src.utils import sha1_hash
 from src.pretrained_models import pretrained_models
 
+def load_pretrained_models():
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'pretrained_models.json')) as json_file:
+        data = json.load(json_file)
+
+        return data['pretrained_models']
+
+
 def cli_main(args=None):
 
-    print('Using Alias-Free GAN version: %s' __version__)
+    print('Using Alias-Free GAN version: %s' % __version__)
+
+    pretrained_models = load_pretrained_models()
 
     parser = ArgumentParser()
 
@@ -35,14 +45,15 @@ def cli_main(args=None):
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
     resume_path = None
+    model_architecture = 'alias-free-rosinality-v1'
     for pretrained in pretrained_models:
         if args.resume_from == pretrained['model_name']:
 
             if args.size == pretrained['model_size']:
                 save_path = os.path.join(project_root, 'pretrained', pretrained['model_name'] + '.pt')
                 if not os.path.isfile(save_path):
-                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['download_url']))
-                    gdown.download(pretrained['download_url'], save_path, quiet=False)
+                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['gdown']))
+                    gdown.download(pretrained['gdown'], save_path, quiet=False)
 
                 # verify hash
                 sha1_hash_val = sha1_hash(save_path)
@@ -50,6 +61,9 @@ def cli_main(args=None):
                     print('Unexpected sha1 hash for %s! Expected %s but got %s. If you see this error try deleting %s and rerunning to download the pretrained model it indicates a corrupted file.' % (save_path, pretrained['sha1'], sha1_hash_val, save_path))
                 
                 resume_path = save_path
+                model_architecture = pretrained['model_architecture']
+
+                print('Licence and compensation information for %s pretrained model: %s' % (pretrained['model_name'], pretrained['licence_and_compensation_information']))
             else:
                 print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
                 exit(1)
@@ -80,7 +94,8 @@ def cli_main(args=None):
 
     trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
 
-    model = AliasFreeGAN(resume_path, **vars(args))
+    print(model_architecture, resume_path, args)
+    model = AliasFreeGAN(model_architecture, resume_path, **vars(args))
     trainer.fit(model, train_loader)
 
 if __name__ == "__main__":

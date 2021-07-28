@@ -93,7 +93,7 @@ def filter_parameters(
 
 
 class FourierFeature(pl.LightningModule):
-    def __init__(self, model_architecture, size, dim, cutoff, eps=1e-8):
+    def __init__(self, model_architecture, size, dim, cutoff=None, eps=1e-8):
         super().__init__()
 
         self.model_architecture = model_architecture
@@ -101,8 +101,11 @@ class FourierFeature(pl.LightningModule):
         coords = torch.linspace(-1, 1, size + 1)[:-1]
 
         if self.model_architecture == 'alias-free-rosinality-v0':
-            freqs = torch.linspace(0, size / 2,, dim // 4)
+            freqs = torch.linspace(0, size / 2, dim // 4)
         else:
+            if cutoff is None:
+                print('Expected cutoff value!')
+                exit(3)
             freqs = torch.linspace(0, cutoff, dim // 4)
 
         self.register_buffer("coords", coords)
@@ -363,7 +366,7 @@ class Generator(nn.Module):
         for i in range(n_mlp):
             layers.append(
                 EqualLinear(
-                    style_dim, style_dim, lr_mul=lr_mlp, activation="fused_lrelu"
+                    style_dim * 2, style_dim * 2, lr_mul=lr_mlp, activation="fused_lrelu"
                 )
             )
 
@@ -406,7 +409,7 @@ class Generator(nn.Module):
             down_filter = None
             if self.model_architecture == 'alias-free-rosinality-v0':
                 down_filter = lowpass_filter(
-                    n_taps * up * 2, cutoffs[i], band_halfs[i], srs[i] * up * 2
+                    n_taps * up, cutoffs[i], band_halfs[i], srs[i] * up * 2
                 )
             else:
                 down_filter = lowpass_filter(

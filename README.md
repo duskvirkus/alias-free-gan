@@ -31,11 +31,10 @@ Licenses and contributions for pretrained models are designed to be flexible so 
 
 Below is a list of supported model architecture. The hope is to support NVlabs code when it comes out.
 
-| `model-architecture` | Base Repository | Repository Version Limit \[start,end\) | Description | Converted to `model-architecture` when loaded |
+| `model-architecture` | Base Repository | Repository Version Limit \[start,end\) | Description |
 |-|-|-|-|-|
-| `alias-free-rosinality-v0` | https://github.com/rosinality/alias-free-gan-pytorch | [intial commit, [`fixed model` commit on July 7th 2021](https://github.com/rosinality/alias-free-gan-pytorch/tree/755a22bc60dca5bd0a8caafd29a40f1412d6b754)\) | Based on the initial version of the rosinality implementation. | Not changed, stays `alias-free-rosinality_v0` |
-| `alias-free-rosinality-v1` | https://github.com/rosinality/alias-free-gan-pytorch | \[[`fixed model` commit on July 7th 2021](https://github.com/rosinality/alias-free-gan-pytorch/tree/755a22bc60dca5bd0a8caafd29a40f1412d6b754), _\) | Based on rosinality implementation after some model fixes. | `alias-free-v1_0_0` |
-| `alias-free-v1_0_0` | (this repository) | [v1.0.0, _) | Version v1 of this repository. | Not converted. | 
+| `alias-free-rosinality-v0` | https://github.com/rosinality/alias-free-gan-pytorch | [intial commit, [`fixed model` commit on July 7th 2021](https://github.com/rosinality/alias-free-gan-pytorch/tree/755a22bc60dca5bd0a8caafd29a40f1412d6b754)\) | Based on the initial version of the rosinality implementation. |
+| `alias-free-rosinality-v1` | https://github.com/rosinality/alias-free-gan-pytorch | \[[`fixed model` commit on July 7th 2021](https://github.com/rosinality/alias-free-gan-pytorch/tree/755a22bc60dca5bd0a8caafd29a40f1412d6b754), _\) | Based on rosinality implementation after some model fixes. |
 
 *Notes:* 
 - _ means to present unless something breaks and this table is not broken.

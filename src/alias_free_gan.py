@@ -20,7 +20,7 @@ else:
 
 SUPPORTED_ARCHITECTURE = [
     'alias-free-rosinality-v0',
-    'alias-free-v1_0_0',
+    'alias-free-rosinality-v1',
 ]
 
 class AliasFreeGAN(pl.LightningModule):
@@ -61,7 +61,7 @@ class AliasFreeGAN(pl.LightningModule):
         generator_args = None
         if self.model_architecture == 'alias-free-rosinality-v0':
             generator_args = {
-                'model_architecture': self.model_architecture
+                'model_architecture': self.model_architecture,
                 'style_dim':self.size,
                 'n_mlp':2,
                 'kernel_size':3,
@@ -78,9 +78,9 @@ class AliasFreeGAN(pl.LightningModule):
                     channel_base=pow(2, 14)
                 ),
             }
-        elif self.model_architecture == 'alias-free-v1_0_0':
+        elif self.model_architecture == 'alias-free-rosinality-v1':
             generator_args = {
-                'model_architecture': self.model_architecture
+                'model_architecture': self.model_architecture,
                 'style_dim':self.size,
                 'n_mlp':2,
                 'kernel_size':3,
