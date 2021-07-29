@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-   branches: [ main ]
+   branches: [ main, devel, stable ]
   pull_request:
-   branches: [ main ]
+   branches: [ main, devel, stable ]
 
 jobs:
   gpu-pytest-on-gcloud:
@@ -55,15 +55,11 @@ jobs:
             --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
             --command "export PATH=/opt/conda/bin:/usr/bin:PATH && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/gpu"
 
-      - name: stop ci-gpu-instance
+      - name: cleanup ci-gpu-instance
         if: always()
         run: |
           gcloud compute instances stop ci-gpu-instance \
             --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }}
-
-      - name: delete ci-gpu-instance
-        if: always()
-        run: |
           echo "y\n" | gcloud compute instances delete ci-gpu-instance \
             --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }}
 
@@ -116,8 +112,8 @@ jobs:
 
       - name: get tpu config and set for later use
         run: |
-          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep ipAddress | awk '{print $2}')"
-          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep ipAddress | awk '{print $2}'):$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep port | awk '{print $2}')"
+          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep '\- ipAddress' | awk {'print $3'})"
+          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep '\- ipAddress' | awk {'print $3'}):$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep port | awk {'print $2'})"
         id: tpu-config
 
       - name: ci-tpu-instance | clone repository

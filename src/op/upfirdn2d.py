@@ -167,9 +167,6 @@ def upfirdn2d_native(
 #         out = out.numpy()
 #     out = af.to_array(out)
 
-#     print(out.shape)
-#     print(w.shape)
-
 #     # run convolution
 #     out = af.signal.convolve2(out, w)
 

@@ -368,12 +368,14 @@ class Generator(nn.Module):
         channels = filter_parameters["channels"]
 
         self.input = FourierFeature(srs[0] + margin * 2, channels[0], cutoff=cutoffs[0])
+        
         self.affine_fourier = EqualLinear(style_dim, 4)
         with torch.no_grad():
             self.affine_fourier.weight.zero_()
             self.affine_fourier.bias.copy_(
                 torch.tensor([1, 0, 0, 0], dtype=torch.float32)
             )
+
         self.conv1 = EqualConv2d(channels[0], channels[0], 1)
 
         self.convs = nn.ModuleList()
@@ -388,9 +390,11 @@ class Generator(nn.Module):
             up_filter = lowpass_filter(
                 n_taps * up * 2, cutoffs[prev], band_halfs[prev], srs[i] * up * 2
             )
+
             down_filter = lowpass_filter(
                 n_taps * up, cutoffs[i], band_halfs[i], srs[i] * up * 2
             )
+
 
             self.convs.append(
                 AliasFreeConv(
