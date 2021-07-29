@@ -112,8 +112,8 @@ jobs:
 
       - name: get tpu config and set for later use
         run: |
-          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep \"\- ipAddress\" | awk '{print $3}')"
-          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep \"\- ipAddress\" | awk '{print $3}'):$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep port | awk '{print $2}')"
+          echo "::set-output name=TPU_IP_ADDRESS::$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep \"\- ipAddress\" | awk {'print $3'})"
+          echo "::set-output name=XRT_TPU_CONFIG::tpu_worker;0;$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep \"\- ipAddress\" | awk {'print $3'}):$(gcloud compute tpus describe ci-tpu-node --zone=${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} | grep port | awk {'print $2'})"
         id: tpu-config
 
       - name: ci-tpu-instance | clone repository
