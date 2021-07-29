@@ -132,7 +132,7 @@ jobs:
         run: |
           gcloud compute ssh ci-tpu-instance \
             --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
-            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"${{ steps.tpu-config.outputs.TPU_IP_ADDRESS }}\" && export XRT_TPU_CONFIG=\"${{ steps.tpu-config.outputs.XRT_TPU_CONFIG }}\" && cd alias-free-gan-pytorch-lightning && python -m pytest ./test/cross && python -m pytest ./test/tpu"
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export USE_CPU_OP=1 && export TPU_IP_ADDRESS=\"${{ steps.tpu-config.outputs.TPU_IP_ADDRESS }}\" && export XRT_TPU_CONFIG=\"${{ steps.tpu-config.outputs.XRT_TPU_CONFIG }}\" && cd alias-free-gan && python -m pytest ./test/cross && python -m pytest ./test/tpu"
 
       - name: cleanup ci-tpu-instance
         if: always()
