@@ -41,11 +41,21 @@ Below is a list of supported model architecture. The hope is to support NVlabs c
 
 ## Notebooks
 
-- GPU Colab Training Notebook - [stable Branch]() | [devel Branch]()
+### GPU Colab Training Notebook
 
-- GPU Colab Inference Notebook - [stable Branch]() | [devel Branch]()
+**`devel` Branch**
 
-- TPU Colab Training Notebook - [stable Branch]() | [devel Branch]()
+[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
+
+### GPU Colab Inference Notebook
+
+coming soon
+
+### TPU Colab Training Notebook
+
+coming soon
 
 ### Note about TPU training
 
