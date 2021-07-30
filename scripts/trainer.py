@@ -90,7 +90,7 @@ def cli_main(args=None):
                 exit(1)
 
     if args.resume_from is not None:
-        resume_path = save_path
+        resume_path = args.resume_from
 
     transform = transforms.Compose(
         [
