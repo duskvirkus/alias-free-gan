@@ -332,6 +332,28 @@ class AliasFreeGAN(pl.LightningModule):
             img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
             PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{save_dir}/seed{seed:04d}.png')
 
+    def generate_from_vectors(
+        self,
+        z_vectors: np.array,
+        save_dir: str,
+        trunc: float,
+        sub_dir: str = 'frames',
+    ) -> None:
+        self.g_ema.eval()
+        actual_save_dir = os.path.join(save_dir, sub_dir)
+        os.makedirs(actual_save_dir, exist_ok=True)
+
+        z_count = 0
+        for z in z_vectors:
+            print('Generate from vectors progress: %d/%d' % (z_count, len(z_vectors)))
+
+            img = self.g_ema(torch.from_numpy(z).float().to(self.device), trunc, self.generator.mean_latent(4096))
+
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{actual_save_dir}/frame-{z_count:09d}.png')
+            z_count += 1
+
+
     @staticmethod
     def _requires_grad(model, flag=True):
         for p in model.parameters():
