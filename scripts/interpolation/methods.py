@@ -1,6 +1,13 @@
+import math
+
 import numpy as np
+
+import torch
+
 from scipy.spatial import distance
 from scipy.interpolate import interp1d
+
+from opensimplex import OpenSimplex
 
 def interpolate(style_dim, seeds, frames, easing_func):
     print('Generating %d frames for interpolation with seeds %s with %s easing.' % (frames, seeds, easing_func.__name__))
@@ -40,8 +47,32 @@ def interpolate(style_dim, seeds, frames, easing_func):
     return z_vectors
     
 
-def circular(seed, frames, diameter):
+def circular(style_dim, seed, frames, diameter_list):
     print('Generating %d frames for circular interpolation with seed %d.' % (frames, seed))
 
-def simplex_noise(seed, frames):
-    pass
+def simplex_noise(style_dim, seed, frames, diameter_list):
+    print('Generating %d frames for simplex noise interpolation with seed %d.' % (frames, seed))
+
+    simplex = OpenSimplex(seed)
+    map_frame = interp1d([0, frames - 1], [0, math.pi * 2])
+
+    position_offsets = np.random.RandomState(seed).randn(style_dim, 2)
+
+    z_vectors = []
+    for i in range(frames):
+        angle = map_frame(i)
+
+        vec = []
+
+        for j in range(style_dim):
+            x_off = position_offsets[j][0] + (diameter_list[j] / 2) * math.cos(angle)
+            y_off = position_offsets[j][1] + (diameter_list[j] / 2) * math.sin(angle)
+            vec.append(simplex.noise2d(x_off, y_off))
+        
+        z_vectors.append(np.reshape(vec, (1, style_dim)))
+
+    return z_vectors
+
+def load_z_vectors(z_vectors_path):
+    z_vectors_file = torch.load(z_vectors_path)
+    return z_vectors_file['z_vectors']

@@ -12,6 +12,7 @@ _all_ = [
     "pydantic",
     "pyhocon",
     "opencv-python-headless",
+    "opensimplex",
 ]
 
 non_colab = [
