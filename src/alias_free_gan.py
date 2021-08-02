@@ -55,20 +55,20 @@ class AliasFreeGAN(pl.LightningModule):
         self.size = kwargs['size']
 
         self.augment = None
-        if 'stylegan2_discriminator' in kwargs:
+        if 'augment' in kwargs:
             self.augment = kwargs['augment']
 
         self.n_samples = None
         if 'n_samples' in kwargs:
-            self.augment = kwargs['n_samples']
+            self.n_samples = kwargs['n_samples']
 
         self.lr_g = 2e-3
         if 'lr_g' in kwargs:
-            self.augment = kwargs['lr_g']
+            self.lr_g = kwargs['lr_g']
 
         self.lr_d = 2e-3
         if 'lr_d' in kwargs:
-            self.augment = kwargs['lr_d']
+            self.lr_d = kwargs['lr_d']
 
         self.d_reg_ratio = 16 / (16 + 1)
         if 'd_reg_every' in kwargs:
@@ -195,7 +195,7 @@ class AliasFreeGAN(pl.LightningModule):
         return self.generator(noise)
 
     def _get_real_img_aug(self, real: Tensor):
-        if self.augment:
+        if self.augment is not None and self.augment:
             real_img_aug, _ = augment(real, ada_aug_p)
             return real_img_aug
         return real
