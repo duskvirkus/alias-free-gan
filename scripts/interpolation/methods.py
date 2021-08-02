@@ -50,6 +50,34 @@ def interpolate(style_dim, seeds, frames, easing_func):
 def circular(style_dim, seed, frames, diameter_list):
     print('Generating %d frames for circular interpolation with seed %d.' % (frames, seed))
 
+    # TODO this could likely be improved
+
+    range_value = 11
+
+    for diameter in diameter_list:
+        if diameter > (range_value - 1):
+            print('Diameter %f is bigger than maximum of %f' % (diameter, range_value - 1))
+
+    map_frame = interp1d([0, frames - 1], [0, math.pi * 2])
+    circular_map = interp1d([-(range_value * range_value), range_value * range_value], [0, 1])
+
+    position_offsets = np.random.RandomState(seed).rand(style_dim, 2)
+
+    z_vectors = []
+    for i in range(frames):
+        angle = map_frame(i)
+
+        vec = []
+
+        for j in range(style_dim):
+            x = position_offsets[j][0] + (diameter_list[j] / 2) * math.cos(angle)
+            y = position_offsets[j][1] + (diameter_list[j] / 2) * math.sin(angle)
+            vec.append(x * y)
+        
+        z_vectors.append(np.reshape(vec, (1, style_dim)))
+
+    return z_vectors
+
 def simplex_noise(style_dim, seed, frames, diameter_list):
     print('Generating %d frames for simplex noise interpolation with seed %d.' % (frames, seed))
 
