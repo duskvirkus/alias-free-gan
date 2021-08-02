@@ -8,20 +8,23 @@ from torch import optim, Tensor
 from torch.nn import functional as F
 from torchvision import utils
 
+import numpy as np
+
+import PIL.Image
+
 import pytorch_lightning as pl
 
 from src.model import Generator, filter_parameters
 from src.stylegan2.model import Discriminator
 from src.stylegan2.non_leaking import augment
 
+from src.supported_arch import SUPPORTED_ARCHITECTURE
+
 if 'USE_CPU_OP' in os.environ:
     from src.op import conv2d_gradfix
 else:
     from src.stylegan2.op import conv2d_gradfix
 
-SUPPORTED_ARCHITECTURE = [
-    'alias-free-rosinality-v1',
-]
 
 class AliasFreeGAN(pl.LightningModule):
 
@@ -44,18 +47,33 @@ class AliasFreeGAN(pl.LightningModule):
         self.results_dir = results_dir
 
         self.resume_path = resume_path
+        self.stylegan2_discriminator = None
+        if 'stylegan2_discriminator' in kwargs and kwargs['stylegan2_discriminator'] is not None:
+            self.stylegan2_discriminator = kwargs['stylegan2_discriminator']
 
-        self.kwargs = kwargs # for making deep copies
-
-        self.batch = kwargs['batch']
-
-        self.augment = kwargs['augment']
-        self.n_samples = kwargs['n_samples']
+        self.batch = int(kwargs['batch'])
         self.size = kwargs['size']
 
-        self.lr_g = kwargs['lr_g']
-        self.lr_d = kwargs['lr_d']
-        self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
+        self.augment = None
+        if 'stylegan2_discriminator' in kwargs:
+            self.augment = kwargs['augment']
+
+        self.n_samples = None
+        if 'n_samples' in kwargs:
+            self.augment = kwargs['n_samples']
+
+        self.lr_g = 2e-3
+        if 'lr_g' in kwargs:
+            self.augment = kwargs['lr_g']
+
+        self.lr_d = 2e-3
+        if 'lr_d' in kwargs:
+            self.augment = kwargs['lr_d']
+
+        self.d_reg_ratio = 16 / (16 + 1)
+        if 'd_reg_every' in kwargs:
+            self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
+        
 
         generator_args = {
             'style_dim':512,
@@ -90,17 +108,24 @@ class AliasFreeGAN(pl.LightningModule):
             channel_multiplier=2
         )
 
-        
-        self.sample_z = torch.randn(
-            self.n_samples, self.generator.style_dim
-        )
+        self.sample_z = None
+        if self.n_samples is not None:
+            self.sample_z = torch.randn(
+                self.n_samples, self.generator.style_dim
+            )
 
     def on_train_start(self):
         print('\n')
-        if self.resume_path is not None or self.resume_path == '':
+        if self.resume_path is not None and self.resume_path != '':
             print(f'Resuming from: %s\n' % self.resume_path)
             self.load_checkpoint(self.resume_path)
-        print(f'AlignFreeGAN device: %s' % self.device)
+
+        if self.stylegan2_discriminator is not None and self.self.stylegan2_discriminator != '':
+            print('Loading StyleGAN2 discriminator from %s' % self.stylegan2_discriminator)
+            self.load_stylegan2_discriminator(self.stylegan2_discriminator)
+
+
+        print('AlignFreeGAN device: %s' % self.device)
         print('\n')
 
         print('Saving z-samples out ...')
@@ -246,7 +271,6 @@ class AliasFreeGAN(pl.LightningModule):
         )
 
     def load_checkpoint(self, load_path):
-        # checkpoint = torch.load(load_path, map_location=torch.device(self.device))
         checkpoint = torch.load(load_path)
 
         self.generator.load_state_dict(checkpoint["g"])
@@ -257,6 +281,78 @@ class AliasFreeGAN(pl.LightningModule):
         self.optimizers()[1].load_state_dict(checkpoint["d_optim"])
 
         # TODO add support for loading hparams
+
+    def load_stylegan2_discriminator(self, load_path):
+        checkpoint = torch.load(load_path)
+        self.discriminator.load_state_dict(checkpoint["d"])
+        self.optimizers()[1].load_state_dict(checkpoint["d_optim"])
+
+    def generate_images(
+        self,
+        seeds: list,
+        save_dir: str,
+        trunc,
+    ):
+        # TODO get batch generation working
+        # remaining_seeds = seeds
+
+        # while remaining_seeds is not None and len(remaining_seeds) > 0:
+        #     current_seeds = None
+        #     if len(remaining_seeds) > self.batch:
+        #         current_seeds = remaining_seeds[:self.batch]
+        #         remaining_seeds = remaining_seeds[self.batch:]
+        #     else:
+        #         current_seeds = remaining_seeds
+        #         remaining_seeds = None
+        #     print('Generating images for seeds: ', current_seeds)
+
+        #     np_rand_array = []
+        #     for seed in current_seeds:
+        #         np_rand_array.append(np.random.RandomState(seed).randn(self.generator.style_dim))
+
+        #     np_rand_stack = np.stack(np_rand_array)
+        #     # print(np_rand_stack.shape)
+        #     z = torch.from_numpy(np_rand_stack)
+        #     z = z.float()
+        #     print(z.shape)
+        #     z = z.to(self.device)
+        #     images = self.g_ema(z) #, trunc, self.generator.mean_latent(4096))
+        #     print(images.shape)
+
+        self.g_ema.eval()
+
+        os.makedirs(save_dir, exist_ok=True)
+
+        for seed in seeds:
+
+            print('Generating image for seed %d at truncation %f and saving to %s' % (seed, trunc, f'{save_dir}/seed{seed:04d}.png'))
+
+            img = self.g_ema(torch.from_numpy(np.random.RandomState(seed).randn(1, self.generator.style_dim)).float().to(self.device), trunc, self.generator.mean_latent(4096))
+
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{save_dir}/seed{seed:04d}.png')
+
+    def generate_from_vectors(
+        self,
+        z_vectors: np.array,
+        save_dir: str,
+        trunc: float,
+        sub_dir: str = 'frames',
+    ) -> None:
+        self.g_ema.eval()
+        actual_save_dir = os.path.join(save_dir, sub_dir)
+        os.makedirs(actual_save_dir, exist_ok=True)
+
+        z_count = 0
+        for z in z_vectors:
+            print('Generate from vectors progress: %d/%d' % (z_count, len(z_vectors)))
+
+            img = self.g_ema(torch.from_numpy(z).float().to(self.device), trunc, self.generator.mean_latent(4096))
+
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{actual_save_dir}/frame-{z_count:09d}.png')
+            z_count += 1
+
 
     @staticmethod
     def _requires_grad(model, flag=True):
@@ -278,4 +374,12 @@ class AliasFreeGAN(pl.LightningModule):
         parser.add_argument("--ada_target", help='(default: %(default)s)', default=0.6, type=float)
         parser.add_argument("--ada_length", help='(default: %(default)s)', default=(500 * 1000), type=int)
         parser.add_argument("--ada_every", help='(default: %(default)s)', default=256, type=int)
+        parser.add_argument("--stylegan2_discriminator", help='Provide path to a rosinality stylegan2 checkpoint to load the discriminator from it. Will load second so if you load another model first it will override that discriminator.', type=str)
+        return parent_parser
+
+
+    @staticmethod
+    def add_generate_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
+        parser = parent_parser.add_argument_group("AliasFreeGenerator")
+        parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
         return parent_parser

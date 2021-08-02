@@ -25,7 +25,7 @@ Licenses and contributions for pretrained models are designed to be flexible so 
 | Branch | All CI | GPU pytest | TPUs pytest |
 |-|-|-|-|
 | `devel` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=devel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/gpu-pytest-on-gcloud?label=GPU%20devel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/tpus-pytest-on-gcloud?label=TPUs%20devel) |
-| `stabel` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stabel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/gpu-pytest-on-gcloud?label=GPU%20stabel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/tpus-pytest-on-gcloud?label=TPUs%20stabel) |
+| `stable` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stabel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/gpu-pytest-on-gcloud?label=GPU%20stabel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/tpus-pytest-on-gcloud?label=TPUs%20stabel) |
 
 ## Supported Model Architectures
 
