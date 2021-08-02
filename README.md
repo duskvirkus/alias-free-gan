@@ -1,6 +1,6 @@
 # Alias-Free GAN
 
-⚠️ Incomplete project ⚠️
+⚠️ Still Beta Testing (first "stable" release sometime soon) ⚠️
 
 An unofficial version of Alias-Free Generative Adversarial Networks (https://arxiv.org/abs/2106.12423). This repository was heavily based on [Kim Seonghyeon's (rosinality) implementation](https://github.com/rosinality/alias-free-gan-pytorch). The goal of this version is to be maintainable, easy to use, and expand the features of existing implementations. This is built using pytorch and pytorch lightning (a framework that abstracts away much of the hardware specific code).
 
@@ -51,7 +51,11 @@ Below is a list of supported model architecture. The hope is to support NVlabs c
 
 ### GPU Colab Inference Notebook
 
-coming soon
+**`devel` Branch**
+
+[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
 
 ### TPU Colab Training Notebook
 
@@ -63,8 +67,7 @@ TPU training exists currently exist simply as a proof of concept however little 
 
 ## Pre-trained Models
 
-!!!Auto generate table here!!!
-
+See [pretrained_models.json](https://github.com/duskvirkus/alias-free-gan/blob/devel/pretrained_models.json).
 
 ## Contributing
 
