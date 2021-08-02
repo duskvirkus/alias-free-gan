@@ -59,16 +59,18 @@ def cli_main(args=None):
     script_parser = parser.add_argument_group("Generate Script")
     script_parser.add_argument("--load_model", help='Load a model checkpoint to use for generating content.', type=str, required=True)
     script_parser.add_argument('--outdir', help='Where to save the output images', type=str, required=True)
-    script_parser.add_argument('--frames', type=int, required=True, help='Total number of frames to generate.')
     script_parser.add_argument('--model_arch', help='The model architecture of the model to be loaded. (default: %(default)s)', type=str, default='alias-free-rosinality-v1')
     script_parser.add_argument('--trunc', type=float, help='Truncation psi (default: %(default)s)', default=0.75)
     script_parser.add_argument('--batch', default=8, help='Number of images to generate each batch. default: %(default)s)')
     script_parser.add_argument('--save_z_vectors', type=bool, help='Save the z vectors used to interpolate. default: %(default)s', default=True)
+    script_parser.add_argument('--log_args', type=bool, help='Saves the arguments to a text file for later reference. default: %(default)s', default=True)
 
     default_method = 'interpolate'
     script_parser.add_argument('--method', type=str, help='Select a method for interpolation. Options: %s default: %s' % (get_function_options(methods), default_method), default=default_method)
 
     script_parser.add_argument('--path_to_z_vectors', type=str, help="Path to saved z vectors to load. For method: 'load_z_vectors'")
+
+    script_parser.add_argument('--frames', type=int, help="Total number of frames to generate. For methods: 'interpolate', 'circular', 'simplex_noise'")
 
     script_parser.add_argument('--seeds', nargs='+', help="Add a seed value to a interpolation walk. First seed value will be used as the seed for a circular or noise walk. If none are provided random ones will be generated. For methods: 'interpolate', 'circular', 'simplex_noise'")
 
@@ -94,6 +96,12 @@ def cli_main(args=None):
     if args.seeds is not None:
         for s in args.seeds:
             seeds.append(int(s))
+
+    if args.method == 'interpolate' or args.method == 'circular' or args.method == 'simplex_noise':
+
+        if args.frames is None:
+            print('--frames is a required argument for method interpolate, circular, or simplex_noise!')
+            exit(3)
 
     if args.method == 'circular' or args.method == 'simplex_noise':
 
@@ -145,6 +153,13 @@ def cli_main(args=None):
         exit(2)
 
     os.makedirs(args.outdir, exist_ok=True)
+
+    if args.log_args:
+        args_log_save_path = os.path.join(args.outdir, 'args_log.txt')
+        print('Saving log of arguments to %s' % args_log_save_path)
+        f = open(args_log_save_path, 'w')
+        print(args, file = f)
+        f.close()
 
     if args.save_z_vectors and args.method != 'load_z_vectors':
         z_vector_save_path = os.path.join(args.outdir, 'z_vectors.pt')
