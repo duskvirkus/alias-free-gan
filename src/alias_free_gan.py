@@ -343,7 +343,7 @@ class AliasFreeGAN(pl.LightningModule):
         actual_save_dir = os.path.join(save_dir, sub_dir)
         os.makedirs(actual_save_dir, exist_ok=True)
 
-        z_count = 0
+        z_count = 1
         for z in z_vectors:
             print('Generate from vectors progress: %d/%d' % (z_count, len(z_vectors)))
 
