@@ -19,6 +19,12 @@ from src.stylegan2.dataset import MultiResolutionDataset
 from src.utils import sha1_hash
 from src.pretrained_models import pretrained_models
 
+def modify_trainer_args(args):
+    print(type(args))
+    print(args)
+    args['checkpoint_callback'] = False
+    return args
+
 def load_pretrained_models():
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'pretrained_models.json')) as json_file:
         data = json.load(json_file)
@@ -113,7 +119,66 @@ def cli_main(args=None):
     #     TensorboardGenerativeModelImageSampler(num_samples=5),
     # ]
 
-    trainer = pl.Trainer.from_argparse_args(args)  #, callbacks=callbacks)
+    trainer = pl.Trainer(
+        logger = args.logger,
+        checkpoint_callback=False,
+        # callbacks = args.callbacks,
+        default_root_dir = args.default_root_dir,
+        gradient_clip_val = args.gradient_clip_val,
+        gradient_clip_algorithm = args.gradient_clip_algorithm,
+        process_position = args.process_position,
+        num_nodes = args.num_nodes,
+        num_processes= args.num_processes,
+        devices = args.devices,
+        gpus = args.gpus,
+        auto_select_gpus = args.auto_select_gpus,
+        tpu_cores = args.tpu_cores,
+        ipus = args.ipus,
+        log_gpu_memory = args.log_gpu_memory,
+        progress_bar_refresh_rate = args.progress_bar_refresh_rate,
+        overfit_batches = args.overfit_batches,
+        track_grad_norm = args.track_grad_norm,
+        check_val_every_n_epoch = args.check_val_every_n_epoch,
+        fast_dev_run = args.fast_dev_run,
+        accumulate_grad_batches = args.accumulate_grad_batches,
+        max_epochs = args.max_epochs,
+        min_epochs = args.min_epochs,
+        max_steps = args.max_steps,
+        min_steps = args.min_steps,
+        max_time = args.max_time,
+        limit_train_batches = args.limit_train_batches,
+        limit_val_batches = args.limit_val_batches,
+        limit_test_batches = args.limit_test_batches,
+        limit_predict_batches = args.limit_predict_batches,
+        val_check_interval = args.val_check_interval,
+        flush_logs_every_n_steps = args.flush_logs_every_n_steps,
+        log_every_n_steps = args.log_every_n_steps,
+        accelerator = args.accelerator,
+        sync_batchnorm = args.sync_batchnorm,
+        precision = args.precision,
+        weights_summary= args.weights_summary,
+        weights_save_path = args.weights_save_path,
+        num_sanity_val_steps = args.num_sanity_val_steps,
+        truncated_bptt_steps = args.truncated_bptt_steps,
+        resume_from_checkpoint = args.resume_from_checkpoint,
+        profiler = args.profiler,
+        benchmark = args.benchmark,
+        deterministic = args.deterministic,
+        reload_dataloaders_every_n_epochs = args.reload_dataloaders_every_n_epochs,
+        reload_dataloaders_every_epoch = args.reload_dataloaders_every_epoch,
+        auto_lr_find = args.auto_lr_find,
+        replace_sampler_ddp = args.replace_sampler_ddp,
+        terminate_on_nan = args.terminate_on_nan,
+        auto_scale_batch_size = args.auto_scale_batch_size,
+        prepare_data_per_node = args.prepare_data_per_node,
+        plugins = args.plugins,
+        amp_backend = args.amp_backend,
+        amp_level = args.amp_level,
+        distributed_backend = args.distributed_backend,
+        move_metrics_to_cpu = args.move_metrics_to_cpu,
+        multiple_trainloader_mode = args.multiple_trainloader_mode,
+        stochastic_weight_avg = args.stochastic_weight_avg,
+    )  #, callbacks=callbacks)
 
     model = AliasFreeGAN(model_architecture, resume_path, results_dir, **vars(args))
     trainer.fit(model, train_loader)
