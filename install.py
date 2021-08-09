@@ -80,7 +80,7 @@ def install_arrayfire_wheel(cuda_version):
 
 if __name__ == '__main__':
 
-    apt_install('wget')
+    # apt_install('wget')
 
     install(_all_)
 
