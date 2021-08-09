@@ -93,6 +93,9 @@ if __name__ == '__main__':
     if 'COLAB_TPU_ADDR' in os.environ and 'CI_RUNNING' not in os.environ:
         install(colab_tpu)
 
+    if 'CI_RUNNING' in os.environ and not os.path.isdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alias-free-gan-ci-files')):
+        subprocess.run(['wget', '-O', 'alias-free-gan-ci-files.zip', 'https://aliasfreegan.sfo3.cdn.digitaloceanspaces.com/alias-free-gan-ci-files.zip'])
+        subprocess.run(['unzip', 'alias-free-gan-ci-files.zip'])
 
     # cuda_version = get_cuda_version()
     # install_arrayfire_wheel(cuda_version)
