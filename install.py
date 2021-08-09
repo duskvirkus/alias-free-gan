@@ -36,7 +36,7 @@ colab_tpu = [
 ]
 
 def apt_install(package_name):
-    subprocess.run(["apt", "-y", "install", package_name])
+    subprocess.run(["apt-get", "-y", "install", package_name])
 
 def install(packages):
     all_packages = ''
