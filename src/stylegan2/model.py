@@ -140,7 +140,7 @@ class EqualConv2d(nn.Module):
         )
 
 
-class EqualLinear(pl.LightningModule):
+class EqualLinear(nn.Module):
     def __init__(
         self, in_dim, out_dim, bias=True, bias_init=0, lr_mul=1, activation=None
     ):
@@ -160,9 +160,9 @@ class EqualLinear(pl.LightningModule):
         self.lr_mul = lr_mul
 
     def forward(self, input):
-        self.weight.data = self.weight.data.to(self.device)
+        self.weight.data = self.weight.data.to(input.device)
         if self.bias is not None:
-            self.bias.data = self.bias.data.to(self.device)
+            self.bias.data = self.bias.data.to(input.device)
 
         if self.activation:
             out = F.linear(input, self.weight * self.scale)

@@ -1,6 +1,7 @@
 import pip
 import os
 import re
+import subprocess
 from sys import platform
 
 _all_ = [
@@ -33,6 +34,9 @@ colab_tpu = [
     "cloud-tpu-client==0.10.0",
     "https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl",
 ]
+
+def apt_install(package_name):
+    subprocess.run(["apt", "-y", "install", package_name])
 
 def install(packages):
     all_packages = ''
@@ -75,6 +79,8 @@ def install_arrayfire_wheel(cuda_version):
 
 
 if __name__ == '__main__':
+
+    apt_install('wget')
 
     install(_all_)
 

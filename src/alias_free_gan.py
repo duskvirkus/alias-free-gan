@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from typing import Any
 import sys
 import os
+import gc
 
 import torch
 from torch import optim, Tensor
@@ -25,6 +26,8 @@ if 'USE_CPU_OP' in os.environ:
 else:
     from src.stylegan2.op import conv2d_gradfix
 
+from src.utils import print_gpu_memory_stats
+
 
 class AliasFreeGAN(pl.LightningModule):
 
@@ -33,6 +36,7 @@ class AliasFreeGAN(pl.LightningModule):
         model_architecture,
         resume_path,
         results_dir,
+        kimg_callback,
         **kwargs: Any,
     ):
         super().__init__()
@@ -45,6 +49,7 @@ class AliasFreeGAN(pl.LightningModule):
 
         self.model_architecture = model_architecture
         self.results_dir = results_dir
+        self.kimg_callback = kimg_callback
 
         self.resume_path = resume_path
         self.stylegan2_discriminator = None
@@ -58,9 +63,9 @@ class AliasFreeGAN(pl.LightningModule):
         if 'augment' in kwargs:
             self.augment = kwargs['augment']
 
-        self.n_samples = None
-        if 'n_samples' in kwargs:
-            self.n_samples = kwargs['n_samples']
+        # self.n_samples = None
+        # if 'n_samples' in kwargs:
+        #     self.n_samples = kwargs['n_samples']
 
         self.lr_g = 2e-3
         if 'lr_g' in kwargs:
@@ -108,12 +113,6 @@ class AliasFreeGAN(pl.LightningModule):
             channel_multiplier=2
         )
 
-        self.sample_z = None
-        if self.n_samples is not None:
-            self.sample_z = torch.randn(
-                self.n_samples, self.generator.style_dim
-            )
-
     def on_train_start(self):
         print('\n')
         if self.resume_path is not None and self.resume_path != '':
@@ -127,17 +126,6 @@ class AliasFreeGAN(pl.LightningModule):
 
         print('AlignFreeGAN device: %s' % self.device)
         print('\n')
-
-        print('Saving z-samples out ...')
-        torch.save(
-            {
-                "sample_z": self.sample_z,
-            },
-            os.path.join(self.results_dir, 'sample_z.pt')
-            # f"checkpoint/{str(i).zfill(6)}.pt",
-        )
-
-
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         real = batch
@@ -241,21 +229,23 @@ class AliasFreeGAN(pl.LightningModule):
         )
         return [g_optim, d_optim]
 
-    def training_epoch_end(self, training_step_outputs):
-        self.g_ema.eval()
-        self.sample_z = self.sample_z.to(self.device)
-        sample = self.g_ema(self.sample_z)
-        utils.save_image(
-            sample,
-            os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-samples.png'),
-            nrow=int(self.n_samples ** 0.5),
-            normalize=True,
-            value_range=(-1, 1),
-        )
-        self.save_checkpoint(os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-checkpoint.pt'))
+    # def training_epoch_end(self, training_step_outputs):
+    #     self.g_ema.eval()
+    #     self.sample_z = self.sample_z.to(self.device)
+    #     sample = self.g_ema(self.sample_z)
+    #     utils.save_image(
+    #         sample,
+    #         os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-samples.png'),
+    #         nrow=int(self.n_samples ** 0.5),
+    #         normalize=True,
+    #         value_range=(-1, 1),
+    #     )
+    #     self.save_checkpoint(os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-checkpoint.pt'))
 
     def save_checkpoint(self, save_path):
         optimizers = self.optimizers()
+        conf = self.hparams
+        conf['kimg_callback'] = None
         torch.save(
             {
                 "g": self.generator.state_dict(),
@@ -263,7 +253,7 @@ class AliasFreeGAN(pl.LightningModule):
                 "g_ema": self.g_ema.state_dict(),
                 "g_optim": self.optimizers()[0].state_dict(),
                 "d_optim": self.optimizers()[1].state_dict(),
-                "conf": self.hparams,
+                "conf": conf,
                 "ada_aug_p": 0.0,
             },
             save_path,
@@ -332,6 +322,44 @@ class AliasFreeGAN(pl.LightningModule):
             img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
             PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{save_dir}/seed{seed:04d}.png')
 
+    def save_samples(
+        self,
+        save_location: str,
+        sample_grid_rows,
+        sample_grid_cols,
+        sample_grid_vectors,
+        grid_cell_dim: int = 256,
+    ):
+        self.g_ema.eval()
+
+        # results = self.generate_from_vectors(sample_grid_vectors, return_results=True, print_progress=False)
+
+        grid = PIL.Image.new('RGB', (sample_grid_cols * grid_cell_dim, sample_grid_rows * grid_cell_dim))
+
+        for i in range(len(sample_grid_vectors)):
+            x_loc = int(i / sample_grid_rows) * grid_cell_dim
+            y_loc = int(i % sample_grid_rows) * grid_cell_dim
+
+            img = self.g_ema(torch.from_numpy(sample_grid_vectors[i]).float().to(self.device))
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB')
+            img = img.resize((grid_cell_dim, grid_cell_dim))
+
+            grid.paste(img, (x_loc, y_loc))
+
+
+        # for i in range(len(results)):
+        #     x_loc = int(i / sample_grid_rows) * grid_cell_dim
+        #     y_loc = int(i % sample_grid_rows) * grid_cell_dim
+        #     img = results[i]
+        #     # img = img.to(device=self.device)
+        #     img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+        #     img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB')
+        #     img = img.resize((grid_cell_dim, grid_cell_dim))
+        #     grid.paste(img, (x_loc, y_loc))
+
+        grid.save(save_location)
+
     def generate_from_vectors(
         self,
         z_vectors: np.array,
@@ -353,6 +381,15 @@ class AliasFreeGAN(pl.LightningModule):
             PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{actual_save_dir}/frame-{z_count:09d}.png')
             z_count += 1
 
+    def get_progress_bar_dict(self):
+        items = super().get_progress_bar_dict()
+        
+        items.pop("v_num", None)
+        items.pop("loss", None)
+
+        if self.kimg_callback is not None:
+            items = self.kimg_callback.update_progress_items(items)
+        return items
 
     @staticmethod
     def _requires_grad(model, flag=True):

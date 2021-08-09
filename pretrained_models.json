@@ -6,7 +6,7 @@
             "model_architecture": "alias-free-rosinality-v1",
             "description": "FFHQ 256 model trained by rosinality (source: https://github.com/rosinality/alias-free-gan-pytorch/issues/3)",
             "model_size": 256,
-            "gdown": "https://drive.google.com/uc?id=15B_Pz-38eIiUBCiVbgPOcv-TIoT7nc5e", 
+            "wget_url": "https://aliasfreegan.sfo3.cdn.digitaloceanspaces.com/rosinality-ffhq-800k.pt",
             "sha1": "06e900cc5451cac5226cf12663c484cf29144e0c",
             "licence_and_compensation_information": "test information"
         }

@@ -69,6 +69,12 @@ TPU training exists currently exist simply as a proof of concept however little 
 
 See [pretrained_models.json](https://github.com/duskvirkus/alias-free-gan/blob/devel/pretrained_models.json).
 
+Use `model_name` as `--resume_from` argument for trainer.py.
+
+Pretrained models will automatically download using wget but here's link's if that isn't working for some reason.
+
+rosinality-ffhq-800k: http://aliasfreegan.geinunepet.rocks/rosinality-ffhq-800k.pt
+
 ## Contributing
 
 ### Contribute Pretrained Models
