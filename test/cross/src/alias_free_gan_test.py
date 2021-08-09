@@ -88,7 +88,7 @@ def test_save_checkpoint_and_load_checkpoint():
         ]
     )
 
-    dataset = MultiResolutionDataset('./ci/flowers-test-dataset-32-256', transform=transform, resolution=args.size)
+    dataset = MultiResolutionDataset('./alias-free-gan-ci-files/flowers-test-dataset-32-256', transform=transform, resolution=args.size)
     train_loader = data.DataLoader(dataset, batch_size=1, num_workers=1, drop_last=True)
 
     model = AliasFreeGAN('alias-free-rosinality-v1', '', '/dev/null', None, **vars(args))
