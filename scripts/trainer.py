@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import re
+import subprocess
 
 from torch.utils import data
 from torchvision import transforms
@@ -10,14 +11,14 @@ from torchvision import transforms
 import pytorch_lightning as pl
 # from pl_bolts.callbacks import TensorboardGenerativeModelImageSampler
 
-import gdown
-
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from src import __version__
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
 from src.utils import sha1_hash
 from src.pretrained_models import pretrained_models
+
+from utils.KimgSaverCallback import KimgSaverCallback
 
 def modify_trainer_args(args):
     print(type(args))
@@ -35,14 +36,14 @@ def create_results_dir():
     results_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../results')
     os.makedirs(results_root, exist_ok=True)
 
-
     max_num = -1
 
     for root, subdirs, files in os.walk(results_root):
         for subdir in subdirs:
             numbers = re.findall('[0-9]+', subdir)
-            if (int(numbers[0]) > max_num):
-                max_num = int(numbers[0])
+            if numbers:
+                if (int(numbers[0]) > max_num):
+                    max_num = int(numbers[0])
     
     max_num += 1
 
@@ -65,12 +66,14 @@ def cli_main(args=None):
     script_parser.add_argument("--resume_from", help='Resume from checkpoint or transfer learn off pretrained model. Leave blank to train from scratch.', type=str, default=None)
 
     parser = AliasFreeGAN.add_model_specific_args(parser)
+    parser = KimgSaverCallback.add_callback_specific_args(parser)
     parser = pl.Trainer.add_argparse_args(parser)
 
     args = parser.parse_args(args)
 
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
+    os.makedirs(os.path.join(project_root, 'pretrained'), exist_ok=True)
     resume_path = None
     model_architecture = 'alias-free-rosinality-v1'
     for pretrained in pretrained_models:
@@ -79,13 +82,17 @@ def cli_main(args=None):
             if args.size == pretrained['model_size']:
                 save_path = os.path.join(project_root, 'pretrained', pretrained['model_name'] + '.pt')
                 if not os.path.isfile(save_path):
-                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['gdown']))
-                    gdown.download(pretrained['gdown'], save_path, quiet=False)
+                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['wget_url']))
+                    sys_call = subprocess.run(["wget", "--progress=bar:force", "-O", save_path, pretrained['wget_url']], capture_output=True)
+                    print(sys_call)
+                    if sys_call.returncode != 0:
+                        exit(7)
 
                 # verify hash
                 sha1_hash_val = sha1_hash(save_path)
                 if (sha1_hash_val != pretrained['sha1']):
                     print('Unexpected sha1 hash for %s! Expected %s but got %s. If you see this error try deleting %s and rerunning to download the pretrained model it indicates a corrupted file.' % (save_path, pretrained['sha1'], sha1_hash_val, save_path))
+                    exit(6)
                 
                 resume_path = save_path
                 model_architecture = pretrained['model_architecture']
@@ -95,8 +102,12 @@ def cli_main(args=None):
                 print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
                 exit(1)
 
-    if args.resume_from is not None:
+    kimg_start_from_resume = None
+    if resume_path is None and args.resume_from is not None:
         resume_path = args.resume_from
+        a = re.search('[0-9]+', args.resume_from)
+        if a:
+            kimg_start_from_resume = int(a.group(0))
 
     transform = transforms.Compose(
         [
@@ -106,6 +117,8 @@ def cli_main(args=None):
         ]
     )
 
+    model_name = args.dataset_path.split('/')[-1] # set model name based on dataset name
+
     print(f'Dataset path: %s' % args.dataset_path)
     
     dataset = MultiResolutionDataset(args.dataset_path, transform=transform, resolution=args.size)
@@ -114,15 +127,26 @@ def cli_main(args=None):
 
     train_loader = data.DataLoader(dataset, batch_size=args.batch, shuffle=True, num_workers=2, drop_last=True)
 
+    if args.resume_from_checkpoint:
+        print('--resume_from_checkpoint is for pytorch lightning checkpoints. Please use --resume_from instead.')
+        exit(1)
 
-    # callbacks = [
-    #     TensorboardGenerativeModelImageSampler(num_samples=5),
-    # ]
+    kimg_callback = KimgSaverCallback(
+        results_dir,
+        model_name = model_name,
+        kimg_start_from_resume = kimg_start_from_resume,
+        **vars(args)
+    )
+
+    callbacks = [
+        # TensorboardGenerativeModelImageSampler(num_samples=5),
+        kimg_callback,
+    ]
 
     trainer = pl.Trainer(
         logger = args.logger,
         checkpoint_callback=False,
-        # callbacks = args.callbacks,
+        callbacks = callbacks,
         default_root_dir = args.default_root_dir,
         gradient_clip_val = args.gradient_clip_val,
         gradient_clip_algorithm = args.gradient_clip_algorithm,
@@ -178,9 +202,9 @@ def cli_main(args=None):
         move_metrics_to_cpu = args.move_metrics_to_cpu,
         multiple_trainloader_mode = args.multiple_trainloader_mode,
         stochastic_weight_avg = args.stochastic_weight_avg,
-    )  #, callbacks=callbacks)
+    )
 
-    model = AliasFreeGAN(model_architecture, resume_path, results_dir, **vars(args))
+    model = AliasFreeGAN(model_architecture, resume_path, results_dir, kimg_callback, **vars(args))
     trainer.fit(model, train_loader)
 
 if __name__ == "__main__":

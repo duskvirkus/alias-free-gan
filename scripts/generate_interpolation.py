@@ -86,7 +86,7 @@ def cli_main(args=None):
         exit(1)
 
     trainer = pl.Trainer(gpus=1, max_epochs=0, log_every_n_steps=1)
-    model = AliasFreeGAN(args.model_arch, args.load_model, args.outdir, **vars(args))
+    model = AliasFreeGAN(args.model_arch, args.load_model, args.outdir, None, **vars(args))
     trainer.fit(model, get_fake_dataloader(args.size))
 
     print(f'Loading Model from: %s\n' % args.load_model)

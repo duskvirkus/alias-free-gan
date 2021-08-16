@@ -16,14 +16,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
 
-# @pytest.fixture
-# def alias_free(size):
-#     parser = ArgumentParser()
-#     parser = AliasFreeGAN.add_model_specific_args(parser)
-#     args = parser.parse_args(['--size', '256'])
-#     return AliasFreeGAN(**vars(args))
-
-
 def tensors_equal(tensor1, tensor2):
     assert(isinstance(tensor1, torch.Tensor))
     assert(isinstance(tensor2, torch.Tensor))
@@ -96,10 +88,10 @@ def test_save_checkpoint_and_load_checkpoint():
         ]
     )
 
-    dataset = MultiResolutionDataset('./ci/flowers-test-dataset-32-256', transform=transform, resolution=args.size)
+    dataset = MultiResolutionDataset(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..', 'alias-free-gan-ci-files/flowers-test-dataset-32-256'), transform=transform, resolution=args.size)
     train_loader = data.DataLoader(dataset, batch_size=1, num_workers=1, drop_last=True)
 
-    model = AliasFreeGAN('alias-free-rosinality-v1', '', '/dev/null', **vars(args))
+    model = AliasFreeGAN('alias-free-rosinality-v1', '', '/dev/null', None, **vars(args))
     trainer = None
     if 'TPU_IP_ADDRESS' in os.environ:
         trainer = pl.Trainer(max_epochs=0, tpu_cores=8)

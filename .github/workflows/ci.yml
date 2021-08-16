@@ -47,7 +47,7 @@ jobs:
         run: |
           gcloud compute ssh ci-gpu-instance \
             --zone ${{ steps.create-ci-gpu-instance.outputs.INSTANCE_ZONE }} \
-            --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan && python install.py"
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan && python install.py"
 
       - name: ci-gpu-instance | run pytest (cross and gpu tests)
         run: |
@@ -126,7 +126,7 @@ jobs:
         run: |
           gcloud compute ssh ci-tpu-instance \
             --zone ${{ steps.create-ci-tpu-instance.outputs.INSTANCE_ZONE }} \
-            --command "export PATH=/opt/conda/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan && python install.py"
+            --command "export PATH=/opt/conda/bin:/usr/bin:PATH && export CI_RUNNING=1 && cd alias-free-gan && python install.py"
 
       - name: ci-tpu-instance | set tpu environment variables, run pytest (cross and tpu tests)
         run: |
