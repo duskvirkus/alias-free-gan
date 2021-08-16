@@ -73,7 +73,7 @@ Use `model_name` as `--resume_from` argument for trainer.py.
 
 Pretrained models will automatically download using wget but here's link's if that isn't working for some reason.
 
-rosinality-ffhq-800k: http://aliasfreegan.geinunepet.rocks/rosinality-ffhq-800k.pt
+rosinality-ffhq-800k: https://aliasfreegan.sfo3.cdn.digitaloceanspaces.com/rosinality-ffhq-800k.pt
 
 ## Contributing
 
