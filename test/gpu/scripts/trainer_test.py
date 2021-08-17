@@ -31,3 +31,10 @@ def test_trainer_from_checkpoint():
     p = subprocess.run(["python", trainer_script_path, "--size", "256", "--gpus", "1", "--dataset_path", dataset_path, "--batch", "8", "--max_epochs", "1", "--resume_from", checkpoint_path])
     assert p.returncode == 0
     clean_up()
+
+def test_trainer_with_augmentation():
+    trainer_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..', 'scripts/trainer.py')
+    dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..', 'alias-free-gan-ci-files/flowers-test-dataset-32-256')
+    p = subprocess.run(["python", trainer_script_path, "--size", "256", "--gpus", "1", "--dataset_path", dataset_path, "--batch", "8", "--max_epochs", "1", '--augment', 'True'])
+    assert p.returncode == 0
+    clean_up()
