@@ -68,7 +68,6 @@ def test_default_arguments():
     assert args.augment_p == 0.0
     assert args.augment == False
     assert args.batch == 16
-    assert args.d_reg_every == 16
     assert args.lr_d == 0.002
     assert args.lr_g == 0.002
     assert args.r1 == 10.0
