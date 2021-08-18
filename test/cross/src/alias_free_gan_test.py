@@ -71,7 +71,6 @@ def test_default_arguments():
     assert args.d_reg_every == 16
     assert args.lr_d == 0.002
     assert args.lr_g == 0.002
-    assert args.n_samples == 8
     assert args.r1 == 10.0
     assert args.size == 256
 
