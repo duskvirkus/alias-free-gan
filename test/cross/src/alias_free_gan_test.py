@@ -65,7 +65,7 @@ def test_default_arguments():
     assert args.ada_every == 8
     assert args.ada_length == 500000
     assert args.ada_target == 0.6
-    assert args.argument_p == 0.0
+    assert args.augment_p == 0.0
     assert args.augment == False
     assert args.batch == 16
     assert args.d_reg_every == 16
