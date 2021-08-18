@@ -48,7 +48,7 @@ class KimgSaverCallback(pl.Callback):
         self.img_count = self.kimg_start * 1000
 
     def update_progress_items(self, items):
-        items['kimgs'] = self.img_count / 1000
+        items['kimgs'] = '{:.3f}'.format(self.img_count / 1000)
         return items
 
     def on_batch_end(self, trainer, model):

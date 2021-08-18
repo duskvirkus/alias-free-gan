@@ -76,8 +76,8 @@ class AliasFreeGAN(pl.LightningModule):
             self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
 
         self.ada_aug_p = 0.0
-        if 'argument_p' in kwargs and kwargs['argument_p'] > 0:
-            self.ada_aug_p = kwargs['argument_p']
+        if 'augment_p' in kwargs and kwargs['augment_p'] > 0:
+            self.ada_aug_p = kwargs['augment_p']
 
         self.augment = False
         if 'augment' in kwargs:
@@ -86,7 +86,7 @@ class AliasFreeGAN(pl.LightningModule):
         self.use_ada_augment = self.augment and self.ada_aug_p == 0
 
         if self.use_ada_augment:
-            self.ada_augment = AdaptiveAugment(kwargs['ada_target'], kwargs['ada_length'], 8, self.device)
+            self.ada_augment = AdaptiveAugment(kwargs['ada_target'], kwargs['ada_length'], kwargs['ada_every'], self.device)
 
         self.r_t_stat = None
 
@@ -381,10 +381,10 @@ class AliasFreeGAN(pl.LightningModule):
             items = self.kimg_callback.update_progress_items(items)
 
         if self.r_t_stat is not None:
-            items['r_t_stat'] = self.r_t_stat
+            items['r_t_stat'] = '{:.3f}'.format(self.r_t_stat)
 
         if self.ada_aug_p:
-            items['ada_aug_p'] = self.ada_aug_p
+            items['ada_aug_p'] = '{:.6f}'.format(self.ada_aug_p)
         
         return items
 
@@ -403,10 +403,10 @@ class AliasFreeGAN(pl.LightningModule):
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)
         parser.add_argument("--r1", help='R1 regularization weights. (default: %(default)s)', default=10., type=float)
         parser.add_argument("--augment", help='Use augmentations. (default: %(default)s)', default=False, type=bool)
-        parser.add_argument("--argument_p", help='(default: %(default)s)', default=0., type=float)
-        parser.add_argument("--ada_target", help='(default: %(default)s)', default=0.6, type=float)
+        parser.add_argument("--augment_p", help='Augment probability, the probability that augmentation is applied. 0.0 is 0 percent and 1.0 is 100. If set to 0.0 and augment is enabled AdaptiveAugmentation will be used. (default: %(default)s)', default=0., type=float)
+        parser.add_argument("--ada_target", help='Target for AdaptiveAugmentation. (default: %(default)s)', default=0.6, type=float)
         parser.add_argument("--ada_length", help='(default: %(default)s)', default=(500 * 1000), type=int)
-        parser.add_argument("--ada_every", help='(default: %(default)s)', default=256, type=int)
+        parser.add_argument("--ada_every", help='How often to update augmentation probabilities when using AdaptiveAugmentation. (default: %(default)s)', default=8, type=int)
         parser.add_argument("--stylegan2_discriminator", help='Provide path to a rosinality stylegan2 checkpoint to load the discriminator from it. Will load second so if you load another model first it will override that discriminator.', type=str)
         return parent_parser
 
