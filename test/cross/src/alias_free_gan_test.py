@@ -62,16 +62,15 @@ def test_default_arguments():
     parser = AliasFreeGAN.add_model_specific_args(parser)
     args = parser.parse_args(['--size', '256'])
 
-    assert args.ada_every == 256
+    assert args.ada_every == 8
     assert args.ada_length == 500000
     assert args.ada_target == 0.6
-    assert args.argument_p == 0.0
+    assert args.augment_p == 0.0
     assert args.augment == False
     assert args.batch == 16
     assert args.d_reg_every == 16
     assert args.lr_d == 0.002
     assert args.lr_g == 0.002
-    assert args.n_samples == 8
     assert args.r1 == 10.0
     assert args.size == 256
 

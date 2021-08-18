@@ -17,7 +17,7 @@ import pytorch_lightning as pl
 
 from src.model import Generator, filter_parameters
 from src.stylegan2.model import Discriminator
-from src.stylegan2.non_leaking import augment
+from src.stylegan2.non_leaking import augment, AdaptiveAugment
 
 from src.supported_arch import SUPPORTED_ARCHITECTURE
 
@@ -63,10 +63,6 @@ class AliasFreeGAN(pl.LightningModule):
         if 'augment' in kwargs:
             self.augment = kwargs['augment']
 
-        # self.n_samples = None
-        # if 'n_samples' in kwargs:
-        #     self.n_samples = kwargs['n_samples']
-
         self.lr_g = 2e-3
         if 'lr_g' in kwargs:
             self.lr_g = kwargs['lr_g']
@@ -78,7 +74,21 @@ class AliasFreeGAN(pl.LightningModule):
         self.d_reg_ratio = 16 / (16 + 1)
         if 'd_reg_every' in kwargs:
             self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
-        
+
+        self.ada_aug_p = 0.0
+        if 'augment_p' in kwargs and kwargs['augment_p'] > 0:
+            self.ada_aug_p = kwargs['augment_p']
+
+        self.augment = False
+        if 'augment' in kwargs:
+            self.augment = kwargs['augment']
+
+        self.use_ada_augment = self.augment and self.ada_aug_p == 0
+
+        if self.use_ada_augment:
+            self.ada_augment = AdaptiveAugment(kwargs['ada_target'], kwargs['ada_length'], kwargs['ada_every'], self.device)
+
+        self.r_t_stat = None
 
         generator_args = {
             'style_dim':512,
@@ -155,6 +165,9 @@ class AliasFreeGAN(pl.LightningModule):
             d_loss = self._d_logistic_loss(real_predict, fake_predict)
             # self.discriminator.zero_grad()
             # return d_loss
+            if self.use_ada_augment:
+                self.ada_aug_p = self.ada_augment.tune(real_predict)
+                self.r_t_stat = self.ada_augment.r_t_stat
             loss = d_loss
 
         return loss
@@ -184,7 +197,8 @@ class AliasFreeGAN(pl.LightningModule):
 
     def _get_real_img_aug(self, real: Tensor):
         if self.augment is not None and self.augment:
-            real_img_aug, _ = augment(real, ada_aug_p)
+            real_img_aug, _ = augment(real, self.ada_aug_p)
+            real_img_aug = real_img_aug.contiguous()
             return real_img_aug
         return real
     
@@ -229,19 +243,6 @@ class AliasFreeGAN(pl.LightningModule):
         )
         return [g_optim, d_optim]
 
-    # def training_epoch_end(self, training_step_outputs):
-    #     self.g_ema.eval()
-    #     self.sample_z = self.sample_z.to(self.device)
-    #     sample = self.g_ema(self.sample_z)
-    #     utils.save_image(
-    #         sample,
-    #         os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-samples.png'),
-    #         nrow=int(self.n_samples ** 0.5),
-    #         normalize=True,
-    #         value_range=(-1, 1),
-    #     )
-    #     self.save_checkpoint(os.path.join(self.results_dir, str(self.current_epoch).zfill(6) + '-epoch-checkpoint.pt'))
-
     def save_checkpoint(self, save_path):
         optimizers = self.optimizers()
         conf = self.hparams
@@ -254,7 +255,7 @@ class AliasFreeGAN(pl.LightningModule):
                 "g_optim": self.optimizers()[0].state_dict(),
                 "d_optim": self.optimizers()[1].state_dict(),
                 "conf": conf,
-                "ada_aug_p": 0.0,
+                "ada_aug_p": self.ada_aug_p,
             },
             save_path,
             # f"checkpoint/{str(i).zfill(6)}.pt",
@@ -347,17 +348,6 @@ class AliasFreeGAN(pl.LightningModule):
 
             grid.paste(img, (x_loc, y_loc))
 
-
-        # for i in range(len(results)):
-        #     x_loc = int(i / sample_grid_rows) * grid_cell_dim
-        #     y_loc = int(i % sample_grid_rows) * grid_cell_dim
-        #     img = results[i]
-        #     # img = img.to(device=self.device)
-        #     img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
-        #     img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB')
-        #     img = img.resize((grid_cell_dim, grid_cell_dim))
-        #     grid.paste(img, (x_loc, y_loc))
-
         grid.save(save_location)
 
     def generate_from_vectors(
@@ -389,6 +379,13 @@ class AliasFreeGAN(pl.LightningModule):
 
         if self.kimg_callback is not None:
             items = self.kimg_callback.update_progress_items(items)
+
+        if self.r_t_stat is not None:
+            items['r_t_stat'] = '{:.3f}'.format(self.r_t_stat)
+
+        if self.ada_aug_p:
+            items['ada_aug_p'] = '{:.6f}'.format(self.ada_aug_p)
+        
         return items
 
     @staticmethod
@@ -401,16 +398,15 @@ class AliasFreeGAN(pl.LightningModule):
         parser = parent_parser.add_argument_group("AliasFreeGAN Model")
         parser.add_argument("--size", help='Pixel dimension of model. Must be 256, 512, or 1024. Required!', type=int, required=True)
         parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int) # TODO add support for --auto_scale_batch_size
-        parser.add_argument("--n_samples", help='Number of samples to generate in training process. Be sure to put --n_samples_off_batch False to use otherwise samples will be the same as batch. (default: %(default)s)', default=8, type=int)
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)
         parser.add_argument("--r1", help='R1 regularization weights. (default: %(default)s)', default=10., type=float)
         parser.add_argument("--augment", help='Use augmentations. (default: %(default)s)', default=False, type=bool)
-        parser.add_argument("--argument_p", help='(default: %(default)s)', default=0., type=float)
-        parser.add_argument("--ada_target", help='(default: %(default)s)', default=0.6, type=float)
+        parser.add_argument("--augment_p", help='Augment probability, the probability that augmentation is applied. 0.0 is 0 percent and 1.0 is 100. If set to 0.0 and augment is enabled AdaptiveAugmentation will be used. (default: %(default)s)', default=0., type=float)
+        parser.add_argument("--ada_target", help='Target for AdaptiveAugmentation. (default: %(default)s)', default=0.6, type=float)
         parser.add_argument("--ada_length", help='(default: %(default)s)', default=(500 * 1000), type=int)
-        parser.add_argument("--ada_every", help='(default: %(default)s)', default=256, type=int)
+        parser.add_argument("--ada_every", help='How often to update augmentation probabilities when using AdaptiveAugmentation. (default: %(default)s)', default=8, type=int)
         parser.add_argument("--stylegan2_discriminator", help='Provide path to a rosinality stylegan2 checkpoint to load the discriminator from it. Will load second so if you load another model first it will override that discriminator.', type=str)
         return parent_parser
 

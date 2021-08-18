@@ -27,6 +27,7 @@ class AdaptiveAugment:
 
     @torch.no_grad()
     def tune(self, real_pred):
+        self.ada_aug_buf = self.ada_aug_buf.to(device=real_pred.device)
         self.ada_aug_buf += torch.tensor(
             (torch.sign(real_pred).sum().item(), real_pred.shape[0]),
             device=real_pred.device,
