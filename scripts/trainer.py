@@ -105,7 +105,7 @@ def cli_main(args=None):
     kimg_start_from_resume = None
     if resume_path is None and args.resume_from is not None:
         resume_path = args.resume_from
-        a = re.search('[0-9]+', args.resume_from)
+        a = re.search('[0-9]{9}', args.resume_from)
         if a:
             kimg_start_from_resume = int(a.group(0))
 

@@ -71,10 +71,6 @@ class AliasFreeGAN(pl.LightningModule):
         if 'lr_d' in kwargs:
             self.lr_d = kwargs['lr_d']
 
-        self.d_reg_ratio = 16 / (16 + 1)
-        if 'd_reg_every' in kwargs:
-            self.d_reg_ratio = kwargs['d_reg_every'] / (kwargs['d_reg_every'] + 1)
-
         self.ada_aug_p = 0.0
         if 'augment_p' in kwargs and kwargs['augment_p'] > 0:
             self.ada_aug_p = kwargs['augment_p']
@@ -236,10 +232,11 @@ class AliasFreeGAN(pl.LightningModule):
 
     def configure_optimizers(self):
         g_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
+        d_reg_ratio = 16 / (16 + 1)
         d_optim = optim.Adam(
             self.discriminator.parameters(),
-            lr=self.lr_d * self.d_reg_ratio,
-            betas=(0 ** self.d_reg_ratio, 0.99 ** self.d_reg_ratio),
+            lr=self.lr_d * d_reg_ratio,
+            betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio),
         )
         return [g_optim, d_optim]
 
@@ -400,7 +397,6 @@ class AliasFreeGAN(pl.LightningModule):
         parser.add_argument("--batch", help='Batch size. Will be overridden if --auto_scale_batch_size is used. (default: %(default)s)', default=16, type=int) # TODO add support for --auto_scale_batch_size
         parser.add_argument("--lr_g", help='Generator learning rate. (default: %(default)s)', default=2e-3, type=float)
         parser.add_argument("--lr_d", help='Discriminator learning rate. (default: %(default)s)', default=2e-3, type=float)
-        parser.add_argument("--d_reg_every", help='Regularize discriminator ever _ iters. (default: %(default)s)', default=16, type=int)
         parser.add_argument("--r1", help='R1 regularization weights. (default: %(default)s)', default=10., type=float)
         parser.add_argument("--augment", help='Use augmentations. (default: %(default)s)', default=False, type=bool)
         parser.add_argument("--augment_p", help='Augment probability, the probability that augmentation is applied. 0.0 is 0 percent and 1.0 is 100. If set to 0.0 and augment is enabled AdaptiveAugmentation will be used. (default: %(default)s)', default=0., type=float)
