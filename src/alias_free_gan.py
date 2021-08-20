@@ -232,12 +232,12 @@ class AliasFreeGAN(pl.LightningModule):
 
     def configure_optimizers(self):
         g_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
-        d_optim = optim.Adam(self.generator.parameters(), lr=self.lr_g, betas=(0, 0.99))
-        # d_optim = optim.Adam(
-        #     self.discriminator.parameters(),
-        #     lr=self.lr_d * self.d_reg_ratio,
-        #     betas=(0 ** self.d_reg_ratio, 0.99 ** self.d_reg_ratio),
-        # )
+        d_reg_ratio = 16 / (16 + 1)
+        d_optim = optim.Adam(
+            self.discriminator.parameters(),
+            lr=self.lr_d * d_reg_ratio,
+            betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio),
+        )
         return [g_optim, d_optim]
 
     def save_checkpoint(self, save_path):
