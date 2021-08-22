@@ -36,18 +36,23 @@ Tezos Wallet Address: tz1PeE5NQyyjyJdnyqyKdtFN27TvN9j3ZcUe - Only send tezos to 
 ## Examples
 
 ![training example gif](assets/examples/aliasfree-training-painterly-faces.gif)
+
 Example of animation made from samples generated in training process.
 
 ![linear interpolation example](assets/examples/first-interpolation-aliasfree-duskvirkus.gif)
+
 Example of linear interpolation between two random seeds.
 
 ![circular loop example](assets/examples/aliasfree-circular-painterly-faces-duskvirkus.gif)
+
 Example of circular loop interpolation.
 
 ![noise loop example](assets/examples/aliasfree-noiseloop-painterly-faces-duskvirkus.gif)
+
 Example of open simplex noise loop interpolation.
 
-![rosinality translate example](assets/examples/aliasfree-ros-trainslate-painterly-faces.gif)
+![rosinality translate example](assets/examples/aliasfree-ros-translate-painterly-faces.gif)
+
 Example output from converted rosinality translate script.
 ## Supported Model Architectures
 
@@ -109,7 +114,7 @@ You can do so by creating a pull request to the `stable` branch. Add information
 ```json
         {
             "model_name": "model-name-no-spaces-no-file-extension",
-            "creator": "github username example:'githubusername'",
+            "creator": "github username",
             "model_architecture": "see model architecture section",
             "description": "Describe your model. What was it trained on? How long was it trained for? Feel free to include links to make donations and suggested donation amounts. Also include licence information such as creative commons or other licencees.",
             "model_size": 512,
