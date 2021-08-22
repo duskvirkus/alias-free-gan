@@ -4,11 +4,10 @@
             "model_name": "rosinality-ffhq-800k",
             "creator": "rosinality",
             "model_architecture": "alias-free-rosinality-v1",
-            "description": "FFHQ 256 model trained by rosinality (source: https://github.com/rosinality/alias-free-gan-pytorch/issues/3)",
+            "description": "FFHQ 256 model trained by rosinality (source: https://github.com/rosinality/alias-free-gan-pytorch/issues/3). Trained for 800k steps with a batch size of 16.",
             "model_size": 256,
             "wget_url": "https://aliasfreegan.sfo3.cdn.digitaloceanspaces.com/rosinality-ffhq-800k.pt",
-            "sha1": "06e900cc5451cac5226cf12663c484cf29144e0c",
-            "licence_and_compensation_information": "test information"
+            "sha1": "06e900cc5451cac5226cf12663c484cf29144e0c"
         }
     ]
 }
