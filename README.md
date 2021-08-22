@@ -39,17 +39,25 @@ Tezos Wallet Address: tz1PeE5NQyyjyJdnyqyKdtFN27TvN9j3ZcUe - Only send tezos to 
 
 Example of animation made from samples generated in training process.
 
+___
+
 ![linear interpolation example](assets/examples/first-interpolation-aliasfree-duskvirkus.gif)
 
 Example of linear interpolation between two random seeds.
+
+___
 
 ![circular loop example](assets/examples/aliasfree-circular-painterly-faces-duskvirkus.gif)
 
 Example of circular loop interpolation.
 
+___
+
 ![noise loop example](assets/examples/aliasfree-noiseloop-painterly-faces-duskvirkus.gif)
 
 Example of open simplex noise loop interpolation.
+
+___
 
 ![rosinality translate example](assets/examples/aliasfree-ros-translate-painterly-faces.gif)
 
