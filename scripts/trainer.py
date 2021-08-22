@@ -97,7 +97,7 @@ def cli_main(args=None):
                 resume_path = save_path
                 model_architecture = pretrained['model_architecture']
 
-                print('\n\nLicence and compensation information for %s pretrained model: %s\n\n' % (pretrained['model_name'], pretrained['licence_and_compensation_information']))
+                print('\n\nModel information:\nname:%s\ncreated by: %s\n%s\n\n' % (pretrained['model_name'], pretrained['creator'], pretrained['description']))
             else:
                 print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
                 exit(1)
