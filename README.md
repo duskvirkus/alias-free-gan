@@ -84,6 +84,12 @@ Below is a list of supported model architecture. The hope is to support NVlabs c
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
 
+**`stable` Branch**
+
+[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
+
 ### GPU Colab Inference Notebook
 
 **`devel` Branch**
@@ -91,6 +97,12 @@ Below is a list of supported model architecture. The hope is to support NVlabs c
 [View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
+
+**`stable` Branch**
+
+[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
 
 ### TPU Notebooks
 
