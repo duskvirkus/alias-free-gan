@@ -71,6 +71,8 @@ def cli_main(args=None):
             resume_path = pretrained.model_path
             model_architecture = pretrained.model_architecture
 
+            print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
+
         except ModelNameNotFoundException as e:
             print(f'Warning! "{args.resume_from}" not found. Starting training from scratch.', flush=True)
 
