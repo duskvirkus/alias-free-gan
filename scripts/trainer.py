@@ -49,24 +49,30 @@ def cli_main(args=None):
     resume_path = None
     model_architecture = 'alias-free-rosinality-v1'
 
-    try:
-        pretrained = get_pretrained_model_from_name(args.resume_from)
-
-        if pretrained.model_size != args.size:
-            raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
-
-        resume_path = pretrained.model_path
-        model_architecture = pretrained.model_architecture
-
-    except ModelNameNotFoundException as e:
-        print(f'Warning! "{resume_from}" not found. Starting training from scratch.', flush=True)
+    custom_resume = args.resume_from.endswith('.pt')
 
     kimg_start_from_resume = None
-    if resume_path is None and args.resume_from is not None:
-        resume_path = args.resume_from
-        a = re.search('[0-9]{9}', args.resume_from)
-        if a:
-            kimg_start_from_resume = int(a.group(0))
+
+    if custom_resume:
+        print('Resuming from custom checkpoint...')
+
+        if args.resume_from is not None:
+            resume_path = args.resume_from
+            a = re.search('[0-9]{9}', args.resume_from)
+            if a:
+                kimg_start_from_resume = int(a.group(0))
+    else:
+        try:
+            pretrained = get_pretrained_model_from_name(args.resume_from)
+
+            if pretrained.model_size != args.size:
+                raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
+
+            resume_path = pretrained.model_path
+            model_architecture = pretrained.model_architecture
+
+        except ModelNameNotFoundException as e:
+            print(f'Warning! "{args.resume_from}" not found. Starting training from scratch.', flush=True)
 
     transform = transforms.Compose(
         [
