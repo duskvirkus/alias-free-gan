@@ -31,7 +31,7 @@ Tezos Wallet Address: tz1PeE5NQyyjyJdnyqyKdtFN27TvN9j3ZcUe - Only send tezos to 
 | Branch | All CI | GPU pytest | TPUs pytest |
 |-|-|-|-|
 | `devel` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=devel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/gpu-pytest-on-gcloud?label=GPU%20devel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/tpus-pytest-on-gcloud?label=TPUs%20devel) |
-| `stable` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stabel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/gpu-pytest-on-gcloud?label=GPU%20stabel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stabel/tpus-pytest-on-gcloud?label=TPUs%20stabel) |
+| `stable` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stable)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/gpu-pytest-on-gcloud?label=GPU%20stabel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/tpus-pytest-on-gcloud?label=TPUs%20stabel) |
 
 ## Examples
 
@@ -78,31 +78,19 @@ Below is a list of supported model architecture. The hope is to support NVlabs c
 
 ### GPU Colab Training Notebook
 
-**`devel` Branch**
-
-[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
-
-**`stable` Branch**
-
-[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb)
+| `branch` | Open in Colab | View in GitHub |
+|-|-|-|
+| `devel` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb) | https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Training-Alias-Free_GAN.ipynb |
+| `stable` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb) | https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Training-Alias-Free_GAN.ipynb |
 
 ### GPU Colab Inference Notebook
 
-**`devel` Branch**
+*aka generate images and walks*
 
-[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
-
-**`stable` Branch**
-
-[View Notebook](https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb)
+| `branch` | Open in Colab | View in GitHub |
+|-|-|-|
+| `devel` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb) | https://github.com/duskvirkus/alias-free-gan/blob/devel/notebooks/GPU_Inference_Alias_Free_GAN.ipynb |
+| `stable` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb) | https://github.com/duskvirkus/alias-free-gan/blob/stable/notebooks/GPU_Inference_Alias_Free_GAN.ipynb |
 
 ### TPU Notebooks
 
