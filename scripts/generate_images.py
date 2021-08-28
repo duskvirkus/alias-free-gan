@@ -27,10 +27,6 @@ def cli_main(args=None):
 
     args = parser.parse_args(args)
 
-    if not os.path.isfile(args.load_model) or args.load_model.split('.')[-1] != 'pt':
-        print('Invalid path %s is not a .pt model file.' % args.load_model)
-        exit(1)
-
     trainer = pl.Trainer(gpus=1, max_epochs=0, log_every_n_steps=1)
     model = AliasFreeGAN(args.model_arch, args.load_model, args.outdir, None, **vars(args))
     trainer.fit(model, get_fake_dataloader(args.size))
