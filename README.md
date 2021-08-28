@@ -31,7 +31,7 @@ Tezos Wallet Address: tz1PeE5NQyyjyJdnyqyKdtFN27TvN9j3ZcUe - Only send tezos to 
 | Branch | All CI | GPU pytest | TPUs pytest |
 |-|-|-|-|
 | `devel` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=devel)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/gpu-pytest-on-gcloud?label=GPU%20devel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/devel/tpus-pytest-on-gcloud?label=TPUs%20devel) |
-| `stable` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stable)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/gpu-pytest-on-gcloud?label=GPU%20stabel) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/tpus-pytest-on-gcloud?label=TPUs%20stabel) |
+| `stable` | [![CI](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml/badge.svg?branch=stable)](https://github.com/duskvirkus/alias-free-gan-pytorch-lightning/actions/workflows/ci.yml) | ![gpu pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/gpu-pytest-on-gcloud?label=GPU%20stable) | ![tpus pytest on gcloud](https://badgen.net/github/checks/duskvirkus/alias-free-gan/stable/tpus-pytest-on-gcloud?label=TPUs%20stable) |
 
 ## Examples
 
