@@ -70,7 +70,7 @@ def cli_main(args=None):
 
     custom_checkpoint = args.load_model.endswith('.pt')
 
-    if custom_chepoint:
+    if custom_checkpoint:
         print(f'Loading Custom Model from: {args.ckpt}')
         model.load_checkpoint(args.ckpt)
     else:
