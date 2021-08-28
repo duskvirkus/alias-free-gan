@@ -45,6 +45,8 @@ class KimgSaverCallback(pl.Callback):
         self.sample_grid_rows = sample_grid_data['sample_grid_rows']
         self.sample_grid_cols = sample_grid_data['sample_grid_cols']
 
+        self.step_counter = 0
+
         self.img_count = self.kimg_start * 1000
 
     def update_progress_items(self, items):
@@ -53,8 +55,9 @@ class KimgSaverCallback(pl.Callback):
 
     def on_batch_end(self, trainer, model):
 
-        global_step = trainer.global_step
-        self.img_count = (self.kimg_start * 1000) + (trainer.global_step + 1) * model.batch
+        self.step_counter += 1
+
+        self.img_count = (self.kimg_start * 1000) + (self.step_counter + 1) * model.batch
 
         save_sample_num = False
         save_checkpoint_num = False
