@@ -25,6 +25,7 @@ from src.fake_dataloader import get_fake_dataloader
 
 import utils.easings as easings
 import interpolation.methods as methods
+from utils.get_pretrained import get_pretrained_model_from_name
 
 def cli_main(args=None):
 

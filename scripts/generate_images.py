@@ -9,6 +9,8 @@ from src import __version__
 from src.alias_free_gan import AliasFreeGAN
 from src.fake_dataloader import get_fake_dataloader
 
+from utils.get_pretrained import get_pretrained_model_from_name
+
 def cli_main(args=None):
 
     print('Using Alias-Free GAN version: %s' % __version__)
