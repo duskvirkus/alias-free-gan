@@ -69,7 +69,7 @@ def cli_main(args=None):
     model = AliasFreeGAN(args.model_arch, args.ckpt, args.outdir, None, **vars(args))
     trainer.fit(model, get_fake_dataloader(args.size))
 
-    custom_checkpoint = args.load_model.endswith('.pt')
+    custom_checkpoint = args.ckpt.endswith('.pt')
 
     if custom_checkpoint:
         print(f'Loading Custom Model from: {args.ckpt}')
