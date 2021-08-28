@@ -41,6 +41,7 @@ class PretrainedModelInformation:
         # meta data
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.model_path = os.path.join(project_root, 'pretrained', self.model_name + '.pt')
+        os.makedirs(os.path.join(project_root, 'pretrained'), exist_ok=True)
         self.download_attempts = 0
 
     def download_model(self) -> bool:
