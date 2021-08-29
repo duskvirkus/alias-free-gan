@@ -49,32 +49,38 @@ def cli_main(args=None):
     resume_path = None
     model_architecture = 'alias-free-rosinality-v1'
 
-    custom_resume = args.resume_from.endswith('.pt')
+    if args.resume_from is None:
+        print('Starting training from scratch...')
 
-    kimg_start_from_resume = None
+        resume_path = ''
 
-    if custom_resume:
-        print('Resuming from custom checkpoint...')
-
-        if args.resume_from is not None:
-            resume_path = args.resume_from
-            a = re.search('[0-9]{9}', args.resume_from)
-            if a:
-                kimg_start_from_resume = int(a.group(0))
     else:
-        try:
-            pretrained = get_pretrained_model_from_name(args.resume_from)
+        custom_resume = args.resume_from.endswith('.pt')
 
-            if pretrained.model_size != args.size:
-                raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
+        kimg_start_from_resume = None
 
-            resume_path = pretrained.model_path
-            model_architecture = pretrained.model_architecture
+        if custom_resume:
+            print('Resuming from custom checkpoint...')
 
-            print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
+            if args.resume_from is not None:
+                resume_path = args.resume_from
+                a = re.search('[0-9]{9}', args.resume_from)
+                if a:
+                    kimg_start_from_resume = int(a.group(0))
+        else:
+            try:
+                pretrained = get_pretrained_model_from_name(args.resume_from)
 
-        except ModelNameNotFoundException as e:
-            print(f'Warning! "{args.resume_from}" not found. Starting training from scratch.', flush=True)
+                if pretrained.model_size != args.size:
+                    raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
+
+                resume_path = pretrained.model_path
+                model_architecture = pretrained.model_architecture
+
+                print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
+
+            except ModelNameNotFoundException as e:
+                print(f'Warning! "{args.resume_from}" not found. Starting training from scratch.', flush=True)
 
     transform = transforms.Compose(
         [
