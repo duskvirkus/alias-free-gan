@@ -35,33 +35,50 @@ Tezos Wallet Address: tz1PeE5NQyyjyJdnyqyKdtFN27TvN9j3ZcUe - Only send tezos to 
 
 ## Examples
 
-![training example gif](assets/examples/aliasfree-training-painterly-faces.gif)
+Training Process
 
 Example of animation made from samples generated in training process.
 
+![training example gif](assets/examples/aliasfree-training-painterly-faces.gif)
 ___
 
-![linear interpolation example](assets/examples/first-interpolation-aliasfree-duskvirkus.gif)
+Linear Interpolations
 
 Example of linear interpolation between two random seeds.
 
-___
+![linear interpolation example with ffhq](assets/examples/interpolation.gif)
 
-![circular loop example](assets/examples/aliasfree-circular-painterly-faces-duskvirkus.gif)
-
-Example of circular loop interpolation.
+![linear interpolation example with custom model](assets/examples/first-interpolation-aliasfree-duskvirkus.gif)
 
 ___
 
-![noise loop example](assets/examples/aliasfree-noiseloop-painterly-faces-duskvirkus.gif)
+Circular Interpolation
+
+Example of circular loop interpolation
+
+![circular loop example with ffhq](assets/examples/circular.gif)
+
+![circular loop example with custom model](assets/examples/aliasfree-circular-painterly-faces-duskvirkus.gif)
+
+___
+
+Open Simplex Noise Loop
 
 Example of open simplex noise loop interpolation.
 
+![noise loop example with ffhq](assets/examples/noise.gif)
+
+![noise loop example with custom model](assets/examples/aliasfree-noiseloop-painterly-faces-duskvirkus.gif)
+
 ___
 
-![rosinality translate example](assets/examples/aliasfree-ros-translate-painterly-faces.gif)
+Rosinality Translate
 
 Example output from converted rosinality translate script.
+
+![rosinality translate example with ffhq](assets/examples/ros-translate.gif)
+
+![rosinality translate example with custom model](assets/examples/aliasfree-ros-translate-painterly-faces.gif)
 ## Supported Model Architectures
 
 Below is a list of supported model architecture. The hope is to support NVlabs code when it comes out.
