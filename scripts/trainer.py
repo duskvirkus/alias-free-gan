@@ -47,6 +47,7 @@ def cli_main(args=None):
 
     os.makedirs(os.path.join(project_root, 'pretrained'), exist_ok=True)
     resume_path = None
+    kimg_start_from_resume = None
     model_architecture = 'alias-free-rosinality-v1'
 
     if args.resume_from is None:
@@ -56,9 +57,7 @@ def cli_main(args=None):
 
     else:
         custom_resume = args.resume_from.endswith('.pt')
-
-        kimg_start_from_resume = None
-
+        
         if custom_resume:
             print('Resuming from custom checkpoint...')
 
