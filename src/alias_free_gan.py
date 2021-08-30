@@ -25,10 +25,6 @@ if 'USE_CPU_OP' in os.environ:
     from src.op import conv2d_gradfix
 else:
     from src.stylegan2.op import conv2d_gradfix
-
-from src.utils import print_gpu_memory_stats
-
-
 class AliasFreeGAN(pl.LightningModule):
 
     def __init__(

@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 import sys
 import os
-import json
 import re
 import subprocess
 
@@ -11,14 +10,14 @@ from torchvision import transforms
 import pytorch_lightning as pl
 # from pl_bolts.callbacks import TensorboardGenerativeModelImageSampler
 
+from utils.create_results_dir import create_results_dir
+from utils.get_pretrained import get_pretrained_model_from_name, ModelNameNotFoundException
+from utils.KimgSaverCallback import KimgSaverCallback
+
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from src import __version__
 from src.alias_free_gan import AliasFreeGAN
 from src.stylegan2.dataset import MultiResolutionDataset
-from src.utils import sha1_hash
-from src.pretrained_models import pretrained_models
-
-from utils.KimgSaverCallback import KimgSaverCallback
 
 def modify_trainer_args(args):
     print(type(args))
@@ -26,38 +25,11 @@ def modify_trainer_args(args):
     args['checkpoint_callback'] = False
     return args
 
-def load_pretrained_models():
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'pretrained_models.json')) as json_file:
-        data = json.load(json_file)
-
-        return data['pretrained_models']
-
-def create_results_dir():
-    results_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../results')
-    os.makedirs(results_root, exist_ok=True)
-
-    max_num = -1
-
-    for root, subdirs, files in os.walk(results_root):
-        for subdir in subdirs:
-            numbers = re.findall('[0-9]+', subdir)
-            if numbers:
-                if (int(numbers[0]) > max_num):
-                    max_num = int(numbers[0])
-    
-    max_num += 1
-
-    results_dir = os.path.join(results_root, 'training-' + str(max_num).zfill(6))
-    os.makedirs(results_dir)
-    return results_dir
-
 def cli_main(args=None):
 
     print('Using Alias-Free GAN version: %s' % __version__)
 
     results_dir = create_results_dir()
-
-    pretrained_models = load_pretrained_models()
 
     parser = ArgumentParser()
 
@@ -75,39 +47,39 @@ def cli_main(args=None):
 
     os.makedirs(os.path.join(project_root, 'pretrained'), exist_ok=True)
     resume_path = None
-    model_architecture = 'alias-free-rosinality-v1'
-    for pretrained in pretrained_models:
-        if args.resume_from == pretrained['model_name']:
-
-            if args.size == pretrained['model_size']:
-                save_path = os.path.join(project_root, 'pretrained', pretrained['model_name'] + '.pt')
-                if not os.path.isfile(save_path):
-                    print('Downloading %s from %s' % (pretrained['model_name'], pretrained['wget_url']))
-                    sys_call = subprocess.run(["wget", "--progress=bar:force", "-O", save_path, pretrained['wget_url']], capture_output=True)
-                    print(sys_call)
-                    if sys_call.returncode != 0:
-                        exit(7)
-
-                # verify hash
-                sha1_hash_val = sha1_hash(save_path)
-                if (sha1_hash_val != pretrained['sha1']):
-                    print('Unexpected sha1 hash for %s! Expected %s but got %s. If you see this error try deleting %s and rerunning to download the pretrained model it indicates a corrupted file.' % (save_path, pretrained['sha1'], sha1_hash_val, save_path))
-                    exit(6)
-                
-                resume_path = save_path
-                model_architecture = pretrained['model_architecture']
-
-                print('\n\nModel information:\nname:%s\ncreated by: %s\n%s\n\n' % (pretrained['model_name'], pretrained['creator'], pretrained['description']))
-            else:
-                print('Invalid model size for %s! Model works with size=%d but your trying to train a size=%d model.' % (pretrained['model_name'], pretrained['model_size'], args.size))
-                exit(1)
-
     kimg_start_from_resume = None
-    if resume_path is None and args.resume_from is not None:
-        resume_path = args.resume_from
-        a = re.search('[0-9]{9}', args.resume_from)
-        if a:
-            kimg_start_from_resume = int(a.group(0))
+    model_architecture = 'alias-free-rosinality-v1'
+
+    if args.resume_from is None:
+        print('Starting training from scratch...')
+
+        resume_path = ''
+
+    else:
+        custom_resume = args.resume_from.endswith('.pt')
+        
+        if custom_resume:
+            print('Resuming from custom checkpoint...')
+
+            if args.resume_from is not None:
+                resume_path = args.resume_from
+                a = re.search('[0-9]{9}', args.resume_from)
+                if a:
+                    kimg_start_from_resume = int(a.group(0))
+        else:
+            try:
+                pretrained = get_pretrained_model_from_name(args.resume_from)
+
+                if pretrained.model_size != args.size:
+                    raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
+
+                resume_path = pretrained.model_path
+                model_architecture = pretrained.model_architecture
+
+                print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
+
+            except ModelNameNotFoundException as e:
+                print(f'Warning! "{args.resume_from}" not found. Starting training from scratch.', flush=True)
 
     transform = transforms.Compose(
         [

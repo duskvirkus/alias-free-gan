@@ -25,6 +25,7 @@ from src.fake_dataloader import get_fake_dataloader
 
 import utils.easings as easings
 import interpolation.methods as methods
+from utils.get_pretrained import get_pretrained_model_from_name
 
 def cli_main(args=None):
 
@@ -68,8 +69,25 @@ def cli_main(args=None):
     model = AliasFreeGAN(args.model_arch, args.ckpt, args.outdir, None, **vars(args))
     trainer.fit(model, get_fake_dataloader(args.size))
 
-    print(f'Loading Model from: %s\n' % args.ckpt)
-    model.load_checkpoint(args.ckpt)
+    custom_checkpoint = args.ckpt.endswith('.pt')
+
+    if custom_checkpoint:
+        print(f'Loading Custom Model from: {args.ckpt}')
+        model.load_checkpoint(args.ckpt)
+    else:
+        print(f'Attempting to load pretrained model...')
+        pretrained = get_pretrained_model_from_name(args.ckpt)
+
+        if pretrained.model_size != args.size:
+            raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
+
+        if args.model_arch != pretrained.model_architecture:
+            raise Exception(f'Pretrained model_architecture of {pretrained.model_architecture} does not match --model_arch value of {args.model_arch}.')
+
+        print(f'Loading pretrained model from: {pretrained.model_path}')
+        model.load_checkpoint(pretrained.model_path)
+
+        print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
 
     model.generator.eval()
 
