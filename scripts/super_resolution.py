@@ -34,13 +34,6 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
         np.copyto(sharpened, image, where=low_contrast_mask)
     return sharpened
 
-def get_translate_matrix(x, y):
-    """
-    Get a translation matrix for numpy warpAffine from x and y translate values.
-    """
-    return 
-
-
 def cli_main(args=None):
 
     print('Using Alias-Free GAN version: %s' % __version__)

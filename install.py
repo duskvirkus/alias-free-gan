@@ -26,7 +26,7 @@ non_colab = [
 ]
 
 non_ci_and_colab = [
-    "pytorch>1.9.0",
+    "torch>1.9.0",
     "torchvision>0.10.0",
 ]
 

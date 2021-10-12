@@ -1,4 +1,5 @@
 import os
+from scripts.utils.get_image_producer import add_image_producer_specific_args, get_image_producer
 import sys
 from argparse import ArgumentParser
 import inspect
@@ -15,11 +16,10 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from src import __version__
 from src.alias_free_gan import AliasFreeGAN
-from src.fake_dataloader import get_fake_dataloader
 
 import utils.easings as easings
 import interpolation.methods as methods
-from utils.get_pretrained import get_pretrained_model_from_name
+from utils.model_for_generation import get_model_for_generation
 
 def create_diameter_list(style_dim: int, seed: int, diameters: list) -> np.array:
     if len(diameters) > 1:
@@ -54,10 +54,14 @@ def cli_main(args=None):
 
     print('Using Alias-Free GAN version: %s' % __version__)
 
+    # Parse Args
+
     parser = ArgumentParser()
     parser = AliasFreeGAN.add_generate_specific_args(parser)
+    parser = add_image_producer_specific_args(parser)
 
     script_parser = parser.add_argument_group("Generate Script")
+
     script_parser.add_argument("--load_model", help='Load a model checkpoint to use for generating content.', type=str, required=True)
     script_parser.add_argument('--outdir', help='Where to save the output images', type=str, required=True)
     script_parser.add_argument('--model_arch', help='The model architecture of the model to be loaded. (default: %(default)s)', type=str, default='alias-free-rosinality-v1')
@@ -82,29 +86,13 @@ def cli_main(args=None):
 
     args = parser.parse_args(args)
 
-    trainer = pl.Trainer(gpus=1, max_epochs=0, log_every_n_steps=1)
-    model = AliasFreeGAN(args.model_arch, args.load_model, args.outdir, None, **vars(args))
-    trainer.fit(model, get_fake_dataloader(args.size))
+    # Setup
 
-    custom_checkpoint = args.load_model.endswith('.pt')
+    model = get_model_for_generation(**vars(args))
 
-    if custom_checkpoint:
-        print(f'Loading Custom Model from: {args.load_model}')
-        model.load_checkpoint(args.load_model)
-    else:
-        print(f'Attempting to load pretrained model...')
-        pretrained = get_pretrained_model_from_name(args.load_model)
+    image_producer = get_image_producer(model, **vars(args))
 
-        if pretrained.model_size != args.size:
-            raise Exception(f'{pretrained.model_name} size of {pretrained.model_size} is not the same as size of {args.size} that was specified in arguments.')
-
-        if args.model_arch != pretrained.model_architecture:
-            raise Exception(f'Pretrained model_architecture of {pretrained.model_architecture} does not match --model_arch value of {args.model_arch}.')
-
-        print(f'Loading pretrained model from: {pretrained.model_path}')
-        model.load_checkpoint(pretrained.model_path)
-
-        print(f'\n\n{pretrained.model_name} information:\n{pretrained.description}\n\n')
+    # Generate z vectors based on method
 
     seeds = []
     if args.seeds is not None:
@@ -187,7 +175,11 @@ def cli_main(args=None):
     elif args.save_z_vectors and args.method == 'load_z_vectors':
         print('Skipping save z_vectors because load_z_vectors is the selected method.')
 
-    model.generate_from_vectors(z_vectors, args.outdir, args.trunc)
+    # Do the interpolation
+
+    # model.generate_from_vectors(z_vectors, args.outdir, args.trunc)
+
+    image_producer.generate_multiple(z_vectors, args.trunc, args.outdir, args.file_extension)
 
 if __name__ == "__main__":
     cli_main()
