@@ -15,7 +15,8 @@ else:
     from .op import FusedLeakyReLU, fused_leaky_relu, upfirdn2d, conv2d_gradfix
 
 import pytorch_lightning as pl
-from pytorch_lightning.core.decorators import auto_move_data
+# '''depricated code'''
+# from pytorch_lightning.core.decorators import auto_move_data
 
 
 class PixelNorm(nn.Module):
