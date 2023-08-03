@@ -115,6 +115,8 @@ class AliasFreeGAN(pl.LightningModule):
             channel_multiplier=2
         )
 
+        self.automatic_optimization = False
+
     def on_train_start(self):
         print('\n')
         if self.resume_path is not None and self.resume_path != '':
